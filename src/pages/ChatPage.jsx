@@ -13,11 +13,11 @@ const ChatPage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [chatTitle, setChatTitle] = useState("Chat");
+  const [receiverId, setReceiverId] = useState(null);
   const scrollRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch job info for title & other participant name
       const { data: job } = await supabase
         .from("jobs")
         .select("title, hirer_id")
@@ -36,29 +36,34 @@ const ChatPage = () => {
             .limit(1)
             .maybeSingle();
           setChatTitle(app?.profiles?.full_name || job.title);
+          setReceiverId(app?.worker_id || null);
         } else {
-          // I'm the worker, show hirer name
+          // I'm the worker, receiver is the hirer
           const { data: hirerProfile } = await supabase
             .from("profiles")
             .select("full_name")
             .eq("id", job.hirer_id)
             .maybeSingle();
           setChatTitle(hirerProfile?.full_name || job.title);
+          setReceiverId(job.hirer_id);
         }
       }
 
-      // Fetch messages
+      // Fetch only messages between these two users for this job
       const { data } = await supabase
         .from("messages")
         .select("*")
         .eq("job_id", jobId)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order("created_at", { ascending: true });
+
       setMessages(data || []);
     };
+
     fetchData();
 
     const channel = supabase
-      .channel(`chat-${jobId}`)
+      .channel(`chat-${jobId}-${user?.id}`)
       .on(
         "postgres_changes",
         {
@@ -68,7 +73,11 @@ const ChatPage = () => {
           filter: `job_id=eq.${jobId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+          const msg = payload.new;
+          // Only add message if it involves the current user
+          if (msg.sender_id === user?.id || msg.receiver_id === user?.id) {
+            setMessages((prev) => [...prev, msg]);
+          }
         },
       )
       .subscribe();
@@ -83,11 +92,12 @@ const ChatPage = () => {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !user || sending) return;
+    if (!newMessage.trim() || !user || sending || !receiverId) return;
     setSending(true);
     await supabase.from("messages").insert({
       job_id: jobId,
       sender_id: user.id,
+      receiver_id: receiverId,
       content: newMessage.trim(),
     });
     setNewMessage("");
@@ -133,10 +143,9 @@ const ChatPage = () => {
             placeholder="Type a message..."
             className="flex-1 h-12 rounded-xl border border-input bg-background px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
           />
-
           <button
             onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
+            disabled={!newMessage.trim() || sending || !receiverId}
             className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center press disabled:opacity-50"
           >
             <Send size={18} className="text-primary-foreground" />

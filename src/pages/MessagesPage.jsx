@@ -16,39 +16,28 @@ const MessagesPage = () => {
     const fetchThreads = async () => {
       if (!user) return;
 
-      // Get all jobs where user is hirer
-      const { data: hirerJobs } = await supabase
-        .from("jobs")
-        .select("id")
-        .eq("hirer_id", user.id);
-
-      // Get all jobs where user has applied
-      const { data: workerApps } = await supabase
-        .from("applications")
-        .select("job_id")
-        .eq("worker_id", user.id);
-
-      const jobIds = new Set();
-      hirerJobs?.forEach((j) => jobIds.add(j.id));
-      workerApps?.forEach((a) => jobIds.add(a.job_id));
-
-      if (jobIds.size === 0) {
-        setLoading(false);
-        return;
-      }
-
+      // Fetch all messages where user is sender or receiver
       const { data: messages } = await supabase
         .from("messages")
-        .select("job_id, content, created_at, jobs!messages_job_id_fkey(title)")
-        .in("job_id", Array.from(jobIds))
+        .select(
+          "job_id, sender_id, receiver_id, content, created_at, jobs!messages_job_id_fkey(title)",
+        )
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
 
       if (messages) {
         const seen = new Map();
         for (const msg of messages) {
-          if (!seen.has(msg.job_id)) {
-            seen.set(msg.job_id, {
+          // The other person in the conversation
+          const otherId =
+            msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+          // Unique key per job + conversation pair
+          const threadKey = `${msg.job_id}_${otherId}`;
+
+          if (!seen.has(threadKey)) {
+            seen.set(threadKey, {
               job_id: msg.job_id,
+              other_user_id: otherId,
               job_title: msg.jobs?.title || "Job",
               last_message: msg.content,
               last_at: msg.created_at || "",
@@ -59,6 +48,7 @@ const MessagesPage = () => {
       }
       setLoading(false);
     };
+
     fetchThreads();
   }, [user]);
 
@@ -96,7 +86,7 @@ const MessagesPage = () => {
         ) : (
           threads.map((t, i) => (
             <motion.button
-              key={t.job_id}
+              key={`${t.job_id}_${t.other_user_id}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
