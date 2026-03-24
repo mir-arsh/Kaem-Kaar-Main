@@ -15,6 +15,7 @@ import ProfilePage from "./pages/ProfilePage";
 import WorkerProfileSetup from "./pages/WorkerProfileSetup";
 import RatingPage from "./pages/RatingPage";
 import LoginPage from "./pages/LoginPage";
+import AIChatbotPage from "./pages/AIChatbotPage";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,15 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/assistant"
+                element={
+                  <ProtectedRoute>
+                    <AIChatbotPage />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="/profile"
                 element={

@@ -139,3 +139,9 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+}

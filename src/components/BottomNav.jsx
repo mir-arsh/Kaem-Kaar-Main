@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { Home, Briefcase, MessageCircle, User } from "lucide-react";
+import { Home, Briefcase, MessageCircle, User, Sparkles } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,7 @@ const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Briefcase, label: "Jobs", path: "/jobs" },
   { icon: MessageCircle, label: "Messages", path: "/messages" },
+  { icon: Sparkles, label: "Assistant", path: "/assistant" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
