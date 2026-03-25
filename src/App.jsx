@@ -21,6 +21,7 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, allowNoRole = false }) => {
   const { user, profile, loading, profileLoaded } = useAuth();
+
   if (loading)
     return (
       <div className="min-h-svh flex items-center justify-center text-muted-foreground">
@@ -34,6 +35,11 @@ const ProtectedRoute = ({ children, allowNoRole = false }) => {
         Loading...
       </div>
     );
+
+  if (!allowNoRole && (!profile?.full_name || !profile?.role)) {
+    return <Navigate to="/profile/setup" replace />;
+  }
+
   return <>{children}</>;
 };
 

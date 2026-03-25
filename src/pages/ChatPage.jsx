@@ -119,17 +119,28 @@ const ChatPage = () => {
             No messages yet. Say hello!
           </p>
         )}
-        {messages.map((msg) => (
-          <ChatBubble
-            key={msg.id}
-            message={msg.content}
-            isMe={msg.sender_id === user?.id}
-            timestamp={new Date(msg.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          />
-        ))}
+        {/* ... inside the message mapping ... */}
+        {messages.map((msg) => {
+          const isMe = msg.sender_id === user?.id;
+
+          return (
+            <div
+              key={msg.id}
+              className={`flex w-full mb-4 ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div className={`max-w-[80%] ${isMe ? "order-1" : "order-2"}`}>
+                <ChatBubble
+                  message={msg.content}
+                  isMe={isMe}
+                  timestamp={new Date(msg.created_at).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                />
+              </div>
+            </div>
+          );
+        })}
         <div ref={scrollRef} />
       </div>
 
