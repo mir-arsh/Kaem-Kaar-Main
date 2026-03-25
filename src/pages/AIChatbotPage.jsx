@@ -91,7 +91,7 @@ const AIChatbotPage = () => {
             <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center">
               <Sparkles size={14} className="text-primary" />
             </div>
-            <h2 className="font-bold text-foreground">AI Assistant</h2>
+            <h2 className="font-bold text-foreground">Rozgar Bab</h2>
           </div>
           {messages.length > 0 && (
             <button
@@ -117,7 +117,7 @@ const AIChatbotPage = () => {
               </div>
               <div className="text-center space-y-1">
                 <p className="font-extrabold text-foreground text-lg">
-                  Kaem Kaar Assistant
+                  Kaem Kaar Rozgar Bab
                 </p>
                 <p className="text-sm text-muted-foreground max-w-[240px]">
                   Ask me anything about jobs, pay rates, or how to use the app.
