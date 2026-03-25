@@ -1,19 +1,19 @@
-import { Star } from "lucide-react";
-import { Button } from "./ui/button";
+import { MapPin, Calendar, Star, ArrowRight, Wrench } from "lucide-react";
 
 const WorkerCard = ({
   name,
   skill,
-  expectedPay,
-  avatarUrl,
+  location,
+  pay,
+  date,
   rating,
-  onChat,
-  onSelect,
+  avatarUrl,
+  onContact,
 }) => {
   return (
-    <div className="p-4 border border-border rounded-2xl bg-card">
+    <div className="p-4 border border-border rounded-2xl bg-card hover:border-primary/30 transition-colors">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -21,48 +21,54 @@ const WorkerCard = ({
               className="w-full h-full object-cover"
             />
           ) : (
-            <span className="text-lg font-bold text-muted-foreground">
-              {name[0]}
+            <span className="text-base font-extrabold text-primary">
+              {name?.[0]?.toUpperCase() || "?"}
             </span>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-foreground truncate">{name}</h3>
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {skill}
-          </p>
-        </div>
-        <div className="text-right shrink-0">
-          <span className="text-sm font-bold text-foreground">
-            ₹{expectedPay}/day
-          </span>
-          {rating !== undefined && rating > 0 && (
-            <div className="flex items-center gap-0.5 justify-end mt-0.5">
-              <Star size={12} className="fill-primary text-primary" />
-              <span className="text-xs font-bold text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-foreground truncate">
+              {name}
+            </h3>
+            <span className="bg-success/10 text-success text-sm font-extrabold px-3 py-1.5 rounded-xl shrink-0 ml-2">
+              ₹{pay}/day
+            </span>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
+              <Wrench size={10} /> {skill}
+            </span>
+            {rating > 0 && (
+              <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
+                <Star size={10} className="fill-primary text-primary" />{" "}
                 {rating.toFixed(1)}
               </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex gap-2">
-        {onChat && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={onChat}
-          >
-            Start Chat
-          </Button>
-        )}
-        {onSelect && (
-          <Button size="sm" className="flex-1" onClick={onSelect}>
-            Select Worker
-          </Button>
+
+      <div className="flex items-center gap-3 text-xs text-muted-foreground font-bold uppercase tracking-wider">
+        <span className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-lg">
+          <MapPin size={12} /> {location}
+        </span>
+        {date && (
+          <span className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-lg">
+            <Calendar size={12} /> {date}
+          </span>
         )}
       </div>
+
+      {onContact && (
+        <button
+          onClick={onContact}
+          className="mt-4 w-full h-12 bg-primary text-primary-foreground font-bold rounded-xl active:scale-[0.97] transition-all text-sm flex items-center justify-center gap-2"
+        >
+          Contact Worker
+          <ArrowRight size={16} />
+        </button>
+      )}
     </div>
   );
 };

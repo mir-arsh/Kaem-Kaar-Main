@@ -16,6 +16,7 @@ import WorkerProfileSetup from "./pages/WorkerProfileSetup";
 import RatingPage from "./pages/RatingPage";
 import LoginPage from "./pages/LoginPage";
 import AIChatbotPage from "./pages/AIChatbotPage";
+import PostAvailabilityPage from "./pages/PostAvailabilityPage";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ChatPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-availability"
+                element={
+                  <ProtectedRoute>
+                    <PostAvailabilityPage />
                   </ProtectedRoute>
                 }
               />
