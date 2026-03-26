@@ -36,30 +36,33 @@ const PostAvailabilityPage = () => {
   const [loading, setLoading] = useState(false);
 
   const handlePost = async () => {
-    if (!skill || !location || !pay) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    if (!user) return;
-    setLoading(true);
+    /* FUTURE_FEATURE: Reactivate when allowing workers to post availability
+  if (!skill || !location || !pay) {
+    toast.error("Please fill all required fields");
+    return;
+  }
+  if (!user) return;
+  setLoading(true);
 
-    const { error } = await supabase.from("worker_availability").insert({
-      worker_id: user.id,
-      skill,
-      location_name: location,
-      pay_per_day: Number(pay),
-      available_date: date || null,
-      note: note || null,
-      is_active: true,
-    });
+  const { error } = await supabase.from("worker_availability").insert({
+    worker_id: user.id,
+    skill,
+    location_name: location,
+    pay_per_day: Number(pay),
+    available_date: date || null,
+    note: note || null,
+    is_active: true,
+  });
 
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Availability posted!");
-      navigate("/jobs");
-    }
+  setLoading(false);
+  if (error) {
+    toast.error(error.message);
+  } else {
+    toast.success("Availability posted!");
+    navigate("/jobs");
+  }
+  */
+    toast.info("This feature is currently under maintenance.");
   };
 
   return (

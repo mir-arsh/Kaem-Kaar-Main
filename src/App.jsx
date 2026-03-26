@@ -105,21 +105,23 @@ const App = () => (
                 }
               />
               <Route
-                path="/chat/:jobId"
+                path="/chat/:jobId/:workerId"
                 element={
                   <ProtectedRoute>
                     <ChatPage />
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/post-availability"
-                element={
-                  <ProtectedRoute>
-                    <PostAvailabilityPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* FUTURE_FEATURE: Worker Availability Route (By hazik, please dont remove this part )
+<Route
+  path="/post-availability"
+  element={
+    <ProtectedRoute>
+      <PostAvailabilityPage />
+    </ProtectedRoute>
+  }
+/> 
+*/}
               <Route
                 path="/messages"
                 element={

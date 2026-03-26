@@ -6,9 +6,10 @@ import ChatBubble from "@/components/ChatBubble";
 import { ArrowLeft, Send } from "lucide-react";
 
 const ChatPage = () => {
-  const { jobId } = useParams();
+  const { jobId, workerId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -16,54 +17,56 @@ const ChatPage = () => {
   const [receiverId, setReceiverId] = useState(null);
   const scrollRef = useRef(null);
 
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return;
+
+      // 1. Get Job details to identify the Hirer
       const { data: job } = await supabase
         .from("jobs")
         .select("title, hirer_id")
         .eq("id", jobId)
         .maybeSingle();
 
-      if (job && user) {
-        if (job.hirer_id === user.id) {
-          // I'm the hirer, find the worker
-          const { data: app } = await supabase
-            .from("applications")
-            .select(
-              "worker_id, profiles!applications_worker_id_fkey(full_name)",
-            )
-            .eq("job_id", jobId)
-            .limit(1)
-            .maybeSingle();
-          setChatTitle(app?.profiles?.full_name || job.title);
-          setReceiverId(app?.worker_id || null);
-        } else {
-          // I'm the worker, receiver is the hirer
-          const { data: hirerProfile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", job.hirer_id)
-            .maybeSingle();
-          setChatTitle(hirerProfile?.full_name || job.title);
-          setReceiverId(job.hirer_id);
-        }
+      if (job) {
+        // Logic: If I am the Hirer, I am talking to the workerId from URL.
+        // If I am the Worker, I am talking to the job.hirer_id.
+        const targetId = user.id === job.hirer_id ? workerId : job.hirer_id;
+        setReceiverId(targetId);
+
+        // 2. Fetch the other person's profile for the Chat Header
+        const { data: otherProfile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", targetId)
+          .maybeSingle();
+
+        setChatTitle(otherProfile?.full_name || job.title);
+
+        // 3. Fetch message history for this specific 1-on-1 thread
+        const { data } = await supabase
+          .from("messages")
+          .select("*")
+          .eq("job_id", jobId)
+          .or(
+            `and(sender_id.eq.${user.id},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${user.id})`,
+          )
+          .order("created_at", { ascending: true });
+
+        setMessages(data || []);
       }
-
-      // Fetch only messages between these two users for this job
-      const { data } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("job_id", jobId)
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .order("created_at", { ascending: true });
-
-      setMessages(data || []);
     };
 
     fetchData();
 
+    // 4. Realtime Subscription
     const channel = supabase
-      .channel(`chat-${jobId}-${user?.id}`)
+      .channel(`chat-${jobId}-${workerId}`)
       .on(
         "postgres_changes",
         {
@@ -74,8 +77,13 @@ const ChatPage = () => {
         },
         (payload) => {
           const msg = payload.new;
-          // Only add message if it involves the current user
-          if (msg.sender_id === user?.id || msg.receiver_id === user?.id) {
+          // Only show message if it belongs to this specific pair
+          const isMe = msg.sender_id === user.id;
+          const isToMe = msg.receiver_id === user.id;
+          const isRelatedToOther =
+            msg.sender_id === workerId || msg.receiver_id === workerId;
+
+          if ((isMe || isToMe) && isRelatedToOther) {
             setMessages((prev) => [...prev, msg]);
           }
         },
@@ -85,66 +93,71 @@ const ChatPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [jobId, user]);
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [jobId, workerId, user]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || !user || sending || !receiverId) return;
+
     setSending(true);
-    await supabase.from("messages").insert({
+    const { error } = await supabase.from("messages").insert({
       job_id: jobId,
       sender_id: user.id,
       receiver_id: receiverId,
       content: newMessage.trim(),
     });
-    setNewMessage("");
+
+    if (error) {
+      console.error("Error sending message:", error);
+    } else {
+      setNewMessage("");
+    }
     setSending(false);
   };
 
   return (
     <div className="max-w-[480px] mx-auto min-h-svh bg-background flex flex-col">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border px-4 h-14 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="press">
+        <button onClick={() => navigate(-1)} className="press p-1">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="font-bold text-foreground truncate">{chatTitle}</h2>
+        <div>
+          <h2 className="font-bold text-foreground truncate text-sm leading-none">
+            {chatTitle}
+          </h2>
+          <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">
+            Job Discussion
+          </p>
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages.length === 0 && (
-          <p className="text-center text-muted-foreground text-sm py-8">
-            No messages yet. Say hello!
-          </p>
-        )}
-        {/* ... inside the message mapping ... */}
-        {messages.map((msg) => {
-          const isMe = msg.sender_id === user?.id;
-
-          return (
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full opacity-50">
+            <p className="text-sm">No messages yet. Start the conversation!</p>
+          </div>
+        ) : (
+          messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex w-full mb-4 ${isMe ? "justify-end" : "justify-start"}`}
+              className={`flex w-full mb-4 ${
+                msg.sender_id === user?.id ? "justify-end" : "justify-start"
+              }`}
             >
-              <div className={`max-w-[80%] ${isMe ? "order-1" : "order-2"}`}>
-                <ChatBubble
-                  message={msg.content}
-                  isMe={isMe}
-                  timestamp={new Date(msg.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                />
-              </div>
+              <ChatBubble
+                message={msg.content}
+                isMe={msg.sender_id === user?.id}
+                timestamp={new Date(msg.created_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              />
             </div>
-          );
-        })}
+          ))
+        )}
         <div ref={scrollRef} />
       </div>
 
-      <div className="sticky bottom-0 bg-background border-t border-border p-3 pb-[env(safe-area-inset-bottom)]">
+      <div className="sticky bottom-0 bg-background border-t border-border p-3">
         <div className="flex gap-2">
           <input
             type="text"
@@ -152,14 +165,14 @@ const ChatPage = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="Type a message..."
-            className="flex-1 h-12 rounded-xl border border-input bg-background px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 h-12 rounded-xl border border-input bg-muted/50 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <button
             onClick={handleSend}
-            disabled={!newMessage.trim() || sending || !receiverId}
-            className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center press disabled:opacity-50"
+            disabled={!newMessage.trim() || sending}
+            className="h-12 w-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center press disabled:opacity-50"
           >
-            <Send size={18} className="text-primary-foreground" />
+            <Send size={18} />
           </button>
         </div>
       </div>

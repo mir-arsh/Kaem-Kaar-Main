@@ -11,18 +11,28 @@ export const AuthProvider = ({ children }) => {
   const [profileLoaded, setProfileLoaded] = useState(false);
 
   const fetchProfile = async (userId) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    if (data) {
-      setProfile({
-        ...data,
-        rating_avg: Number(data.rating_avg) || 0,
-      });
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile({
+          ...data,
+          rating_avg: Number(data.rating_avg) || 0,
+        });
+      } else {
+        setProfile(null);
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    } finally {
+      setProfileLoaded(true);
     }
-    setProfileLoaded(true);
   };
 
   const setRole = async (role) => {
