@@ -17,7 +17,6 @@ const ChatPage = () => {
   const [receiverId, setReceiverId] = useState(null);
   const scrollRef = useRef(null);
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -26,7 +25,6 @@ const ChatPage = () => {
     const fetchData = async () => {
       if (!user) return;
 
-      // 1. Get Job details to identify the Hirer
       const { data: job } = await supabase
         .from("jobs")
         .select("title, hirer_id")
@@ -34,12 +32,9 @@ const ChatPage = () => {
         .maybeSingle();
 
       if (job) {
-        // Logic: If I am the Hirer, I am talking to the workerId from URL.
-        // If I am the Worker, I am talking to the job.hirer_id.
         const targetId = user.id === job.hirer_id ? workerId : job.hirer_id;
         setReceiverId(targetId);
 
-        // 2. Fetch the other person's profile for the Chat Header
         const { data: otherProfile } = await supabase
           .from("profiles")
           .select("full_name")
@@ -48,7 +43,6 @@ const ChatPage = () => {
 
         setChatTitle(otherProfile?.full_name || job.title);
 
-        // 3. Fetch message history for this specific 1-on-1 thread
         const { data } = await supabase
           .from("messages")
           .select("*")
@@ -64,7 +58,6 @@ const ChatPage = () => {
 
     fetchData();
 
-    // 4. Realtime Subscription
     const channel = supabase
       .channel(`chat-${jobId}-${workerId}`)
       .on(

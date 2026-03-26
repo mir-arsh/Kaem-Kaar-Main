@@ -36,7 +36,6 @@ const JobDetailPage = () => {
   const fetchJobAndApplicants = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Job
       const { data: jobData, error: jobError } = await supabase
         .from("jobs")
         .select("*")
@@ -46,7 +45,6 @@ const JobDetailPage = () => {
       if (jobError) throw jobError;
       setJob(jobData);
 
-      // 2. Fetch Applicants with Profiles (only if user is the Hirer)
       if (jobData?.hirer_id === user?.id) {
         const { data: appData } = await supabase
           .from("applications")
@@ -77,21 +75,18 @@ const JobDetailPage = () => {
   const handleAcceptWorker = async (workerId, workerName) => {
     setActionLoading(true);
     try {
-      // Step 1: Update the selected application to 'accepted'
       await supabase
         .from("applications")
         .update({ status: "accepted" })
         .eq("job_id", id)
         .eq("worker_id", workerId);
 
-      // Step 2: Delete all other applications for this job automatically
       await supabase
         .from("applications")
         .delete()
         .eq("job_id", id)
         .neq("worker_id", workerId);
 
-      // Step 3: Update Job Status to 'in_progress' and get updated data
       const { data: updatedJob, error: jobError } = await supabase
         .from("jobs")
         .update({ status: "in_progress" })
@@ -101,11 +96,9 @@ const JobDetailPage = () => {
 
       if (jobError) throw jobError;
 
-      // Step 4: Synchronize local state
       setJob(updatedJob);
       setApplicants([]);
 
-      // Step 5: Start the conversation with a system message
       await supabase.from("messages").insert({
         job_id: id,
         sender_id: user.id,
@@ -137,7 +130,6 @@ const JobDetailPage = () => {
 
       toast.success(`Job marked as ${newStatus}`);
 
-      // If finished, send to rating page
       if (newStatus === "completed") {
         navigate(`/rate/${id}`);
       }
@@ -201,7 +193,6 @@ const JobDetailPage = () => {
           </div>
         </section>
 
-        {/* --- HIRER CONTROLS --- */}
         {isHirer && (
           <div className="space-y-4">
             {/* View 1: Hiring Phase */}
@@ -290,7 +281,6 @@ const JobDetailPage = () => {
               </>
             )}
 
-            {/* View 2: Active Work Phase */}
             {job?.status === "in_progress" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -347,7 +337,6 @@ const JobDetailPage = () => {
           </div>
         )}
 
-        {/* --- WORKER VIEW --- */}
         {!isHirer && (
           <div className="py-10">
             {job?.status === "in_progress" ? (

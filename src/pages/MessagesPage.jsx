@@ -40,11 +40,9 @@ const MessagesPage = () => {
     if (messages) {
       const seen = new Map();
       for (const msg of messages) {
-        // 1. Identify the "Other Person"
         const otherId =
           msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
 
-        // 2. SAFETY CHECK: Skip if data is corrupted or missing
         if (
           !otherId ||
           !msg.job_id ||
