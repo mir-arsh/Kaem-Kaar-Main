@@ -118,7 +118,6 @@ const WorkerProfileSetup = () => {
       header={<h2 className="font-bold text-foreground">Setup Profile</h2>}
     >
       <div className="px-4 py-6 space-y-5">
-        {/* Avatar */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -165,7 +164,6 @@ const WorkerProfileSetup = () => {
           />
         </motion.div>
 
-        {/* Role Selection */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -247,7 +245,6 @@ const WorkerProfileSetup = () => {
           </div>
         </motion.div>
 
-        {/* Worker-specific fields */}
         {role === "worker" && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}

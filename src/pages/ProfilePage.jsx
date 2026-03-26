@@ -25,7 +25,6 @@ const ProfilePage = () => {
   return (
     <AppShell header={<h2 className="font-bold text-foreground">Profile</h2>}>
       <div className="px-4 py-6 space-y-6">
-        {/* Avatar & Name with gradient background */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -54,7 +53,6 @@ const ProfilePage = () => {
           </span>
         </motion.div>
 
-        {/* Info Cards */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -125,7 +123,6 @@ const ProfilePage = () => {
             )}
         </motion.div>
 
-        {/* Actions */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

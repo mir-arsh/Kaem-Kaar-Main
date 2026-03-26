@@ -27,7 +27,6 @@ const RatingPage = () => {
     const fetchRatingContext = async () => {
       setLoading(true);
       try {
-        // 1. Fetch Job and the accepted application
         const { data: jobData, error: jobError } = await supabase
           .from("jobs")
           .select(
@@ -43,10 +42,8 @@ const RatingPage = () => {
         if (jobError) throw jobError;
         setJob(jobData);
 
-        // 2. Determine who we are rating
         const targetId = jobData.applications[0]?.worker_id;
 
-        // 3. Get the Target User's profile info
         const { data: profileData } = await supabase
           .from("profiles")
           .select("full_name, avatar_url")
@@ -74,7 +71,6 @@ const RatingPage = () => {
 
     setSubmitting(true);
     try {
-      // 1. Insert the review
       const { error: reviewError } = await supabase.from("reviews").insert({
         job_id: jobId,
         rater_id: user.id,
@@ -85,7 +81,6 @@ const RatingPage = () => {
 
       if (reviewError) throw reviewError;
 
-      // 2. Recalculate average rating for the target user
       const { data: allReviews } = await supabase
         .from("reviews")
         .select("rating")
@@ -97,7 +92,6 @@ const RatingPage = () => {
       );
       const avgRating = totalRating / allReviews.length;
 
-      // 3. Update target user profile with new average
       await supabase
         .from("profiles")
         .update({ rating_avg: avgRating })
@@ -151,7 +145,6 @@ const RatingPage = () => {
           </div>
         </motion.div>
 
-        {/* --- STAR RATING --- */}
         <div className="flex flex-col items-center gap-6 py-4">
           <div className="flex gap-3">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -183,7 +176,6 @@ const RatingPage = () => {
           </span>
         </div>
 
-        {/* --- COMMENT SECTION --- */}
         <div className="space-y-3">
           <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
             Write a comment
