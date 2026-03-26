@@ -37,7 +37,6 @@ const HomePage = () => {
           .eq("worker_id", user.id);
         setJobCount(count || 0);
       }
-      // Unread-ish: count distinct job threads with messages
       const { data: msgs } = await supabase
         .from("messages")
         .select("job_id")

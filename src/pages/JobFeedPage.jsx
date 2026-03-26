@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ─── SUB-COMPONENT: MY APPLICATIONS (WORKER ONLY) ───────────────────────────
 const statusConfig = {
   pending: { label: "Pending", classes: "bg-yellow-100 text-yellow-800" },
   accepted: { label: "Accepted", classes: "bg-green-100 text-green-800" },
@@ -115,7 +114,6 @@ const MyApplications = ({ userId }) => {
   );
 };
 
-// ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 const JobFeedPage = () => {
   const { profile, user } = useAuth();
   const navigate = useNavigate();
@@ -263,7 +261,6 @@ const JobFeedPage = () => {
         )}
       </div>
 
-      {/* --- CONTENT AREA --- */}
       <div className="px-4 py-4 space-y-4">
         {!isHirer && tab === "applications" ? (
           <MyApplications userId={user?.id} />

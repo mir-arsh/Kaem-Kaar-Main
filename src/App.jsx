@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { Loader2 } from "lucide-react";
+
 import HomePage from "./pages/HomePage";
 import JobFeedPage from "./pages/JobFeedPage";
 import PostJobPage from "./pages/PostJobPage";
@@ -23,21 +25,18 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children, allowNoRole = false }) => {
   const { user, profile, loading, profileLoaded } = useAuth();
 
-  if (loading)
+  if (loading || (user && !profileLoaded)) {
     return (
-      <div className="min-h-svh flex items-center justify-center text-muted-foreground">
-        Loading...
+      <div className="min-h-svh flex items-center justify-center bg-background">
+        <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     );
+  }
+
   if (!user) return <Navigate to="/login" replace />;
-  if (!profileLoaded)
-    return (
-      <div className="min-h-svh flex items-center justify-center text-muted-foreground">
-        Loading...
-      </div>
-    );
 
   if (!allowNoRole && (!profile?.full_name || !profile?.role)) {
+    console.log("Redirecting to setup: Data missing", profile);
     return <Navigate to="/profile/setup" replace />;
   }
 
@@ -46,12 +45,13 @@ const ProtectedRoute = ({ children, allowNoRole = false }) => {
 
 const AuthRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading)
+  if (loading) {
     return (
       <div className="min-h-svh flex items-center justify-center text-muted-foreground">
-        Loading...
+        <Loader2 className="animate-spin text-primary" size={24} />
       </div>
     );
+  }
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
@@ -60,7 +60,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
-        <Sonner />
+        <Sonner position="top-center" />
         <AuthProvider>
           <BrowserRouter>
             <Routes>
@@ -72,6 +72,7 @@ const App = () => (
                   </AuthRoute>
                 }
               />
+
               <Route
                 path="/"
                 element={
@@ -112,16 +113,18 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+
               {/* FUTURE_FEATURE: Worker Availability Route (By hazik, please dont remove this part )
-<Route
-  path="/post-availability"
-  element={
-    <ProtectedRoute>
-      <PostAvailabilityPage />
-    </ProtectedRoute>
-  }
-/> 
-*/}
+              <Route
+                path="/post-availability"
+                element={
+                  <ProtectedRoute>
+                    <PostAvailabilityPage />
+                  </ProtectedRoute>
+                }
+              /> 
+              */}
+
               <Route
                 path="/messages"
                 element={
@@ -138,7 +141,6 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/profile"
                 element={
@@ -171,6 +173,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
