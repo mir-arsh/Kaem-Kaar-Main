@@ -39,26 +39,22 @@
 
 @layer base {
   :root {
-    /* Parchment #F5E6C8 → hsl(38, 71%, 87%) as light base */
     --background: 38 71% 87%;
-    --foreground: 25 90% 8%; /* very dark warm brown for text */
+    --foreground: 25 90% 8%;
 
-    --card: 38 60% 91%; /* slightly lighter parchment */
+    --card: 38 60% 91%;
     --card-foreground: 25 90% 8%;
     --popover: 38 60% 91%;
     --popover-foreground: 25 90% 8%;
 
-    /* Chinar Red #B5281C → hsl(4, 72%, 41%) */
     --primary: 4 72% 41%;
     --primary-foreground: 38 71% 95%;
 
-    /* Saffron #E8A020 → hsl(37, 83%, 51%) as secondary/accent */
     --secondary: 37 83% 51%;
     --secondary-foreground: 25 90% 8%;
     --muted: 38 40% 82%;
     --muted-foreground: 25 30% 35%;
 
-    /* Saffron as accent */
     --accent: 37 83% 51%;
     --accent-foreground: 25 90% 8%;
 
@@ -72,7 +68,6 @@
     --ring: 4 72% 41%;
     --radius: 0.75rem;
 
-    /* Sidebar — slightly deeper parchment */
     --sidebar-background: 38 50% 83%;
     --sidebar-foreground: 25 90% 8%;
     --sidebar-primary: 4 72% 41%;
@@ -84,26 +79,22 @@
   }
 
   .dark {
-    /* Night Walnut #1A1208 → hsl(40, 56%, 7%) as dark base */
     --background: 40 56% 7%;
-    --foreground: 38 71% 87%; /* parchment for text */
+    --foreground: 38 71% 87%;
 
-    --card: 35 45% 11%; /* slightly lighter walnut */
+    --card: 35 45% 11%;
     --card-foreground: 38 71% 87%;
     --popover: 35 45% 11%;
     --popover-foreground: 38 71% 87%;
 
-    /* Chinar Red lighter for dark mode */
     --primary: 4 72% 55%;
     --primary-foreground: 40 56% 5%;
 
-    /* Deep Red #8C1E14 → hsl(4, 74%, 31%) as secondary in dark */
     --secondary: 4 74% 22%;
     --secondary-foreground: 38 71% 87%;
     --muted: 35 30% 14%;
     --muted-foreground: 38 40% 60%;
 
-    /* Saffron as accent in dark */
     --accent: 37 83% 51%;
     --accent-foreground: 40 56% 5%;
 
@@ -116,7 +107,6 @@
     --success: 152 60% 50%;
     --success-foreground: 40 56% 5%;
 
-    /* Sidebar — even deeper walnut */
     --sidebar-background: 40 56% 5%;
     --sidebar-foreground: 38 71% 87%;
     --sidebar-primary: 4 72% 55%;
