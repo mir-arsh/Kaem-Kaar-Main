@@ -16,6 +16,54 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+const JobLocationMap = ({ lat, lng, title }) => (
+  <div className="space-y-2">
+    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+      <MapPin size={12} className="text-primary" /> Job Location
+    </label>
+    <div className="h-48 w-full rounded-2xl overflow-hidden border border-border">
+      <MapContainer
+        center={[lat, lng]}
+        zoom={15}
+        style={{ height: "100%", width: "100%" }}
+        scrollWheelZoom={false}
+        dragging={true}
+        zoomControl={true}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        />
+        <Marker position={[lat, lng]}>
+          <Popup>{title}</Popup>
+        </Marker>
+      </MapContainer>
+    </div>
+    <a
+      href={`https://www.google.com/maps?q=${lat},${lng}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-primary hover:underline mt-2"
+    >
+      <MapPin size={11} /> Open in Google Maps
+    </a>
+  </div>
+);
 
 const JobDetailPage = () => {
   const { id } = useParams();
@@ -164,9 +212,9 @@ const JobDetailPage = () => {
   return (
     <AppShell header={<h2 className="font-bold">Job Command Center</h2>}>
       <div className="px-4 py-6 space-y-6">
-        {/* --- JOB INFO SECTION --- */}
-        <section className="bg-card p-6 rounded-[2rem] border border-border shadow-sm">
-          <div className="flex justify-between items-start mb-4">
+        {/* ── JOB INFO SECTION ── */}
+        <section className="bg-card p-6 rounded-[2rem] border border-border shadow-sm space-y-5">
+          <div className="flex justify-between items-start">
             <h1 className="text-2xl font-black tracking-tighter leading-tight">
               {job?.title}
             </h1>
@@ -180,10 +228,12 @@ const JobDetailPage = () => {
               {job?.status}
             </div>
           </div>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-6 italic">
+
+          <p className="text-muted-foreground text-sm leading-relaxed italic">
             "{job?.description}"
           </p>
-          <div className="flex gap-6 pt-5 border-t border-border/50 text-sm font-bold">
+
+          <div className="flex gap-6 pt-4 border-t border-border/50 text-sm font-bold">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <MapPin size={16} className="text-primary" /> {job?.location_name}
             </div>
@@ -191,11 +241,25 @@ const JobDetailPage = () => {
               ₹{job?.pay_amount}
             </div>
           </div>
+
+          {/* Map — only render if coordinates exist */}
+          {job?.latitude && job?.longitude ? (
+            <JobLocationMap
+              lat={job.latitude}
+              lng={job.longitude}
+              title={job.title}
+            />
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-xl px-4 py-3">
+              <MapPin size={13} />
+              No exact location pinned for this job.
+            </div>
+          )}
         </section>
 
+        {/* ── HIRER VIEWS ── */}
         {isHirer && (
           <div className="space-y-4">
-            {/* View 1: Hiring Phase */}
             {job?.status === "open" && (
               <>
                 <div className="flex items-center justify-between px-1">
@@ -319,7 +383,7 @@ const JobDetailPage = () => {
                       className="h-14 rounded-2xl border-border bg-card font-bold text-xs uppercase tracking-widest"
                       onClick={() => toast.info("Contract terms are active.")}
                     >
-                      <FileText size={18} className="mr-2 text-primary" />{" "}
+                      <FileText size={18} className="mr-2 text-primary" />
                       Agreement
                     </Button>
                     <Button
@@ -337,8 +401,9 @@ const JobDetailPage = () => {
           </div>
         )}
 
+        {/* ── WORKER VIEW ── */}
         {!isHirer && (
-          <div className="py-10">
+          <div className="py-4">
             {job?.status === "in_progress" ? (
               <div className="bg-muted/50 p-8 rounded-[2rem] text-center border-2 border-dashed border-border">
                 <div className="w-12 h-12 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
