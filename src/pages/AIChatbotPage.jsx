@@ -117,7 +117,7 @@ const AIChatbotPage = () => {
               </div>
               <div className="text-center space-y-1">
                 <p className="font-extrabold text-foreground text-lg">
-                  Kaem Kaar Rozgar Bab
+                  Rozgar Bab
                 </p>
                 <p className="text-sm text-muted-foreground max-w-[240px]">
                   Ask me anything about jobs, pay rates, or how to use the app.
