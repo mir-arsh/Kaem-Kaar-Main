@@ -54,6 +54,8 @@ const WorkerProfileSetup = () => {
   };
 
   const handleSave = async () => {
+    console.log("handleSave called", { name, role, skill, pay, location });
+
     if (!name || !role) {
       toast.error("Please fill your name and select a role");
       return;
@@ -62,7 +64,10 @@ const WorkerProfileSetup = () => {
       toast.error("Please fill all worker fields");
       return;
     }
-    if (!user) return;
+    if (!user) {
+      console.error("No user found");
+      return;
+    }
     setLoading(true);
 
     let avatar_url = profile?.avatar_url || null;
@@ -73,6 +78,7 @@ const WorkerProfileSetup = () => {
         .from("avatars")
         .upload(path, avatarFile, { upsert: true });
       if (uploadError) {
+        console.error("Avatar upload error:", uploadError);
         toast.error("Failed to upload photo");
         setLoading(false);
         return;
@@ -98,9 +104,13 @@ const WorkerProfileSetup = () => {
       profileData.location_name = location || null;
     }
 
+    console.log("Saving profile data:", profileData);
+
     const { error } = await supabase
       .from("profiles")
       .upsert(profileData, { onConflict: "id" });
+
+    console.log("Save error:", error);
 
     setLoading(false);
     if (error) {
@@ -307,6 +317,7 @@ const WorkerProfileSetup = () => {
           transition={{ delay: 0.25 }}
         >
           <Button
+            type="button"
             onClick={handleSave}
             disabled={loading || !role}
             className="w-full"
