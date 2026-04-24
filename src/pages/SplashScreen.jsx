@@ -20,9 +20,7 @@ export default function SplashScreen({ onFinish }) {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background">
       
 
-      
 
-      {/* Brand name */}
       <motion.p
         className="mt-7 text-center text-[36px] leading-[1.2] tracking-wide text-foreground"
         style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -35,7 +33,6 @@ export default function SplashScreen({ onFinish }) {
         Kaar
       </motion.p>
 
-      {/* Tagline */}
       <motion.p
         className="mt-3 text-[12px] tracking-[0.18em] uppercase text-muted-foreground"
         initial={{ opacity: 0, y: 6 }}
@@ -45,7 +42,6 @@ export default function SplashScreen({ onFinish }) {
         Kashmir's job marketplace
       </motion.p>
 
-      {/* Loading bar */}
       <motion.div
         className="absolute bottom-10 w-[80px] h-[3px] rounded-full bg-muted overflow-hidden"
         initial={{ opacity: 0 }}
