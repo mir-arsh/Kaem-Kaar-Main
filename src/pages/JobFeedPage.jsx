@@ -27,84 +27,86 @@ const MyApplications = ({ userId }) => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data, error } = await supabase
-        .from("applications")
-        .select(
-          `
+  const fetch = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("applications")
+      .select(`
+        id,
+        status,
+        job_id,
+        created_at,
+        jobs (
           id,
-          status,
-          created_at,
-          jobs (
-            id,
-            title,
-            pay_amount,
-            location_name,
-            profiles:hirer_id ( full_name )
-          )
-        `,
+          title,
+          pay_amount,
+          location_name,
+          profiles:hirer_id ( full_name )
         )
-        .eq("worker_id", userId)
-        .order("created_at", { ascending: false });
+      `)
+      .eq("worker_id", userId)
+      .order("created_at", { ascending: false });
 
-      if (!error) setApplications(data || []);
-      setLoading(false);
-    };
+    if (!error) setApplications(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetch();
   }, [userId]);
 
-  if (loading)
-    return (
-      <div className="flex justify-center py-16">
-        <Loader2 className="animate-spin text-primary" />
-      </div>
-    );
+  // --- NEW UNDO LOGIC ---
+  const handleWithdraw = async (appId) => {
+    const { error } = await supabase
+      .from("applications")
+      .delete()
+      .eq("id", appId);
 
-  if (applications.length === 0)
-    return (
-      <div className="text-center py-16 opacity-50">
-        <ClipboardList size={40} className="mx-auto mb-3" />
-        <p className="text-sm font-bold">No applications yet.</p>
-      </div>
-    );
+    if (error) {
+      toast.error("Could not withdraw application");
+    } else {
+      toast.success("Application withdrawn");
+      // Refresh the list locally
+      setApplications(prev => prev.filter(a => a.id !== appId));
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-3">
       {applications.map((app, i) => {
         const status = statusConfig[app.status] ?? statusConfig.pending;
-        const isAccepted = app.status === "accepted";
+        const isPending = app.status === "pending";
 
         return (
           <motion.div
             key={app.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className={`bg-card border rounded-2xl p-4 space-y-3 ${isAccepted ? "border-l-4 border-l-green-500" : "border-border"}`}
+            className="bg-card border rounded-2xl p-4 space-y-3"
           >
             <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm truncate">{app.jobs?.title}</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">
-                  {app.jobs?.profiles?.full_name} ·{" "}
-                  {new Date(app.created_at).toLocaleDateString()}
+              <div className="flex-1">
+                <p className="font-bold text-sm">{app.jobs?.title}</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                  {app.jobs?.profiles?.full_name}
                 </p>
               </div>
-              <span
-                className={`text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-md ${status.classes}`}
-              >
+              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${status.classes}`}>
                 {status.label}
               </span>
             </div>
+
             <div className="flex justify-between items-center pt-2 border-t border-border/50">
-              <span className="text-xs font-bold text-primary">
-                ₹{app.jobs?.pay_amount}
-              </span>
-              {isAccepted && (
-                <span className="text-[10px] font-black text-green-600 uppercase">
-                  You are hired! 🎉
-                </span>
+              <span className="text-xs font-bold text-primary">₹{app.jobs?.pay_amount}</span>
+              
+              {/* --- UNDO BUTTON --- */}
+              {isPending && (
+                <button
+                  onClick={() => handleWithdraw(app.id)}
+                  className="text-[10px] font-bold text-destructive hover:underline press"
+                >
+                  Undo Application
+                </button>
               )}
             </div>
           </motion.div>

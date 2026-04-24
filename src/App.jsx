@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ import { Loader2 } from "lucide-react";
 import HomePage from "./pages/HomePage";
 import JobFeedPage from "./pages/JobFeedPage";
 import PostJobPage from "./pages/PostJobPage";
-import RoleSelectionPage from "./pages/RoleSelectionPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import ChatPage from "./pages/ChatPage";
 import MessagesPage from "./pages/MessagesPage";
@@ -19,13 +18,13 @@ import WorkerProfileSetup from "./pages/WorkerProfileSetup";
 import RatingPage from "./pages/RatingPage";
 import LoginPage from "./pages/LoginPage";
 import AIChatbotPage from "./pages/AIChatbotPage";
-import PostAvailabilityPage from "./pages/PostAvailabilityPage";
 import SplashScreen from "./pages/SplashScreen";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading, profileLoaded } = useAuth();
+  const { user, loading, profile, profileLoaded } = useAuth();
+  const location = useLocation();
 
   if (loading || (user && !profileLoaded)) {
     return (
@@ -37,18 +36,18 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  // ONE-TIME SETUP LOGIC: 
+  // If user has no role and isn't already on the setup page, force them to setup.
+  if (profileLoaded && !profile?.role && location.pathname !== "/profile/setup") {
+    return <Navigate to="/profile/setup" replace />;
+  }
+
   return <>{children}</>;
 };
 
 const AuthRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-svh flex items-center justify-center text-muted-foreground">
-        <Loader2 className="animate-spin text-primary" size={24} />
-      </div>
-    );
-  }
+  if (loading) return null;
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
@@ -72,115 +71,18 @@ const App = () => {
           <AuthProvider>
             <BrowserRouter>
               <Routes>
-                <Route
-                  path="/login"
-                  element={
-                    <AuthRoute>
-                      <LoginPage />
-                    </AuthRoute>
-                  }
-                />
+                <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />
 
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <HomePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/jobs"
-                  element={
-                    <ProtectedRoute>
-                      <JobFeedPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/jobs/:id"
-                  element={
-                    <ProtectedRoute>
-                      <JobDetailPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/post-job"
-                  element={
-                    <ProtectedRoute>
-                      <PostJobPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/chat/:jobId/:workerId"
-                  element={
-                    <ProtectedRoute>
-                      <ChatPage />
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* FUTURE_FEATURE: Worker Availability Route (By hazik, please dont remove this part )
-                <Route
-                  path="/post-availability"
-                  element={
-                    <ProtectedRoute>
-                      <PostAvailabilityPage />
-                    </ProtectedRoute>
-                  }
-                /> 
-                */}
-
-                <Route
-                  path="/messages"
-                  element={
-                    <ProtectedRoute>
-                      <MessagesPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/assistant"
-                  element={
-                    <ProtectedRoute>
-                      <AIChatbotPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile/setup"
-                  element={
-                    <ProtectedRoute>
-                      <WorkerProfileSetup />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/rate/:jobId"
-                  element={
-                    <ProtectedRoute>
-                      <RatingPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/role-selection"
-                  element={
-                    <ProtectedRoute>
-                      <RoleSelectionPage />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                <Route path="/jobs" element={<ProtectedRoute><JobFeedPage /></ProtectedRoute>} />
+                <Route path="/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
+                <Route path="/post-job" element={<ProtectedRoute><PostJobPage /></ProtectedRoute>} />
+                <Route path="/chat/:jobId/:workerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+                <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+                <Route path="/assistant" element={<ProtectedRoute><AIChatbotPage /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/profile/setup" element={<ProtectedRoute><WorkerProfileSetup /></ProtectedRoute>} />
+                <Route path="/rate/:jobId" element={<ProtectedRoute><RatingPage /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ChatBubble from "@/components/ChatBubble";
 import { ArrowLeft, Send } from "lucide-react";
+import { toast } from "sonner";
 
 const ChatPage = () => {
   const { jobId, workerId } = useParams();
@@ -20,6 +21,21 @@ const ChatPage = () => {
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Handle message deletion logic
+  const handleDeleteMessage = async (messageId) => {
+    const { error } = await supabase
+      .from("messages")
+      .delete()
+      .eq("id", messageId)
+      .eq("sender_id", user.id); // Security: Only allow deleting own messages
+
+    if (error) {
+      toast.error("Could not delete message");
+    } else {
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,9 +63,7 @@ const ChatPage = () => {
           .from("messages")
           .select("*")
           .eq("job_id", jobId)
-          .or(
-            `and(sender_id.eq.${user.id},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${user.id})`,
-          )
+          .or(`and(sender_id.eq.${user.id},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${user.id})`)
           .order("created_at", { ascending: true });
 
         setMessages(data || []);
@@ -62,24 +76,20 @@ const ChatPage = () => {
       .channel(`chat-${jobId}-${workerId}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `job_id=eq.${jobId}`,
-        },
+        { event: "*", schema: "public", table: "messages", filter: `job_id=eq.${jobId}` },
         (payload) => {
-          const msg = payload.new;
-          // Only show message if it belongs to this specific pair
-          const isMe = msg.sender_id === user.id;
-          const isToMe = msg.receiver_id === user.id;
-          const isRelatedToOther =
-            msg.sender_id === workerId || msg.receiver_id === workerId;
-
-          if ((isMe || isToMe) && isRelatedToOther) {
-            setMessages((prev) => [...prev, msg]);
+          if (payload.eventType === "INSERT") {
+            const msg = payload.new;
+            const isMe = msg.sender_id === user.id;
+            const isToMe = msg.receiver_id === user.id;
+            const isRelated = msg.sender_id === workerId || msg.receiver_id === workerId;
+            if ((isMe || isToMe) && isRelated) {
+              setMessages((prev) => [...prev, msg]);
+            }
+          } else if (payload.eventType === "DELETE") {
+            setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
           }
-        },
+        }
       )
       .subscribe();
 
@@ -90,7 +100,6 @@ const ChatPage = () => {
 
   const handleSend = async () => {
     if (!newMessage.trim() || !user || sending || !receiverId) return;
-
     setSending(true);
     const { error } = await supabase.from("messages").insert({
       job_id: jobId,
@@ -98,55 +107,31 @@ const ChatPage = () => {
       receiver_id: receiverId,
       content: newMessage.trim(),
     });
-
-    if (error) {
-      console.error("Error sending message:", error);
-    } else {
-      setNewMessage("");
-    }
+    if (!error) setNewMessage("");
     setSending(false);
   };
 
   return (
     <div className="max-w-[480px] mx-auto min-h-svh bg-background flex flex-col">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border px-4 h-14 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="press p-1">
-          <ArrowLeft size={20} />
-        </button>
+        <button onClick={() => navigate(-1)} className="press p-1"><ArrowLeft size={20} /></button>
         <div>
-          <h2 className="font-bold text-foreground truncate text-sm leading-none">
-            {chatTitle}
-          </h2>
-          <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">
-            Job Discussion
-          </p>
+          <h2 className="font-bold text-foreground truncate text-sm leading-none">{chatTitle}</h2>
+          <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Job Discussion</p>
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full opacity-50">
-            <p className="text-sm">No messages yet. Start the conversation!</p>
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex w-full mb-4 ${msg.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
+            <ChatBubble
+              message={msg.content}
+              isMe={msg.sender_id === user?.id}
+              onDelete={() => handleDeleteMessage(msg.id)} // Pass delete function
+              timestamp={new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            />
           </div>
-        ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex w-full mb-4 ${
-                msg.sender_id === user?.id ? "justify-end" : "justify-start"
-              }`}
-            >
-              <ChatBubble
-                message={msg.content}
-                isMe={msg.sender_id === user?.id}
-                timestamp={new Date(msg.created_at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              />
-            </div>
-          ))
-        )}
+        ))}
         <div ref={scrollRef} />
       </div>
 
@@ -160,11 +145,7 @@ const ChatPage = () => {
             placeholder="Type a message..."
             className="flex-1 h-12 rounded-xl border border-input bg-muted/50 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
-          <button
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
-            className="h-12 w-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center press disabled:opacity-50"
-          >
+          <button onClick={handleSend} disabled={!newMessage.trim() || sending} className="h-12 w-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center press disabled:opacity-50">
             <Send size={18} />
           </button>
         </div>

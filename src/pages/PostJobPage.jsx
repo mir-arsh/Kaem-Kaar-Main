@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight, MapPin, LocateFixed } from "lucide-react";
+import { ArrowRight, MapPin, LocateFixed, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
@@ -24,6 +24,17 @@ L.Icon.Default.mergeOptions({
 });
 
 const DEFAULT_COORDS = { lat: 34.0837, lng: 74.7973 };
+
+// Generalized Categories
+const CATEGORIES = [
+  { id: "repair", label: "Maintenance & Repair" },
+  { id: "homehelp", label: "Home Help & Cleaning" },
+  { id: "cooking", label: "Cooking & Catering" },
+  { id: "delivery", label: "Delivery & Transport" },
+  { id: "education", label: "Tuition & Training" },
+  { id: "labor", label: "Manual Labor" },
+  { id: "other", label: "Other Services" }
+];
 
 const DraggableMarker = ({ coords, setCoords }) => {
   useMapEvents({
@@ -52,6 +63,7 @@ const PostJobPage = () => {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
   const [pay, setPay] = useState("");
@@ -61,7 +73,7 @@ const PostJobPage = () => {
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
-      toast.error("Geolocation not supported by your browser");
+      toast.error("Geolocation not supported");
       return;
     }
     setLocating(true);
@@ -74,12 +86,12 @@ const PostJobPage = () => {
       () => {
         toast.error("Could not get your location");
         setLocating(false);
-      },
+      }
     );
   };
 
   const handlePost = async () => {
-    if (!title || !location || !pay || !date) {
+    if (!title || !location || !pay || !date || !category) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -90,6 +102,7 @@ const PostJobPage = () => {
       hirer_id: user.id,
       title,
       description,
+      category,
       location_name: location,
       latitude: coords.lat,
       longitude: coords.lng,
@@ -108,10 +121,28 @@ const PostJobPage = () => {
   };
 
   return (
-    <AppShell
-      header={<h2 className="font-bold text-foreground">Post a Job</h2>}
-    >
+    <AppShell header={<h2 className="font-bold text-foreground">Post a Job</h2>}>
       <div className="px-4 py-6 space-y-5">
+        
+        {/* General Category Selection */}
+        <div className="space-y-1">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+            <LayoutGrid size={12} /> Work Category
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full h-14 rounded-xl border border-input bg-card px-4 text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="">Select Category...</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-1">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Job Title
@@ -119,8 +150,8 @@ const PostJobPage = () => {
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="h-14 rounded-xl"
-            placeholder="e.g. Need a plumber"
+            className="h-14 rounded-xl font-medium"
+            placeholder="e.g. Help with house cleaning"
           />
         </div>
 
@@ -131,23 +162,24 @@ const PostJobPage = () => {
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="rounded-xl min-h-[100px]"
-            placeholder="What needs to be done?"
+            className="rounded-xl min-h-[100px] font-medium"
+            placeholder="Tell the worker what you need..."
           />
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Area Name
+            Area / Landmark
           </label>
           <Input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="h-14 rounded-xl"
-            placeholder="e.g. Lal Chowk, Rajbagh"
+            className="h-14 rounded-xl font-medium"
+            placeholder="e.g. Near Khyber Hospital"
           />
         </div>
 
+        {/* Location Mapping */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -157,62 +189,51 @@ const PostJobPage = () => {
               type="button"
               onClick={handleUseMyLocation}
               disabled={locating}
-              className="flex items-center gap-1.5 text-xs font-bold text-primary disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-bold text-primary"
             >
               <LocateFixed size={13} />
               {locating ? "Locating..." : "Use my location"}
             </button>
           </div>
 
-          <div className="h-56 w-full rounded-2xl overflow-hidden border border-border">
+          <div className="h-48 w-full rounded-2xl overflow-hidden border border-border">
             <MapContainer
               center={[coords.lat, coords.lng]}
               zoom={14}
               style={{ height: "100%", width: "100%" }}
               key={`${coords.lat}-${coords.lng}`}
             >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <DraggableMarker coords={coords} setCoords={setCoords} />
             </MapContainer>
           </div>
+        </div>
 
-          <p className="text-[10px] text-muted-foreground italic text-center flex items-center justify-center gap-1">
-            <MapPin size={10} /> Tap map to move pin · or drag the marker
-          </p>
-
-          <div className="flex gap-2 text-[10px] font-mono text-muted-foreground justify-center">
-            <span>Lat: {coords.lat.toFixed(5)}</span>
-            <span>·</span>
-            <span>Lng: {coords.lng.toFixed(5)}</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Date
+            </label>
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="h-14 rounded-xl"
+            />
           </div>
-        </div>
 
-        <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Date
-          </label>
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="h-14 rounded-xl"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Pay Offered (₹)
-          </label>
-          <Input
-            type="number"
-            value={pay}
-            onChange={(e) => setPay(e.target.value)}
-            className="h-14 rounded-xl"
-            placeholder="500"
-          />
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Pay (₹)
+            </label>
+            <Input
+              type="number"
+              value={pay}
+              onChange={(e) => setPay(e.target.value)}
+              className="h-14 rounded-xl"
+              placeholder="0.00"
+            />
+          </div>
         </div>
 
         <Button
@@ -220,8 +241,8 @@ const PostJobPage = () => {
           disabled={loading}
           className="w-full h-14 rounded-xl text-base font-black"
         >
-          {loading ? "Posting..." : "Post Job"}
-          <ArrowRight size={18} />
+          {loading ? "Posting..." : "Confirm & Post"}
+          {!loading && <ArrowRight className="ml-2" size={18} />}
         </Button>
       </div>
     </AppShell>

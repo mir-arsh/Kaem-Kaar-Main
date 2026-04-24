@@ -5,7 +5,6 @@ const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -19,67 +18,41 @@ export const AuthProvider = ({ children }) => {
         .maybeSingle();
 
       if (error) throw error;
-
-      if (data) {
-        setProfile({
-          ...data,
-          rating_avg: Number(data.rating_avg) || 0,
-        });
-      } else {
-        setProfile(null);
-      }
+      setProfile(data);
     } catch (err) {
-      console.error("Error fetching profile:", err);
+      console.error("Profile error:", err);
     } finally {
       setProfileLoaded(true);
     }
   };
 
-  const setRole = async (role) => {
-    if (!user) return;
-    await supabase.from("profiles").update({ role }).eq("id", user.id);
-    await fetchProfile(user.id);
+  // FIX: This function now updates Supabase AND refreshes the UI
+  const setRole = async (newRole) => {
+    if (!user) return { success: false };
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: newRole })
+        .eq("id", user.id);
+
+      if (error) throw error;
+      
+      await fetchProfile(user.id); // Immediate UI refresh
+      return { success: true };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err };
+    }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-  };
-
-  const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id);
-  };
+  const refreshProfile = () => user && fetchProfile(user.id);
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "TOKEN_REFRESHED" && !session) {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-      setSession(session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => fetchProfile(session.user.id), 0);
-      } else {
+      if (session?.user) fetchProfile(session.user.id);
+      else {
         setProfile(null);
-        setProfileLoaded(true);
-      }
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
         setProfileLoaded(true);
       }
       setLoading(false);
@@ -89,25 +62,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        profile,
-        session,
-        loading,
-        profileLoaded,
-        signOut,
-        refreshProfile,
-        setRole,
-      }}
-    >
+    <AuthContext.Provider value={{ user, profile, loading, profileLoaded, setRole, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
