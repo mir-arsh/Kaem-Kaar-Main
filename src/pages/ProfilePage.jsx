@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   LogOut,
-  ArrowRightLeft,
-  Star,
   Pencil,
   MapPin,
   Wrench,
   IndianRupee,
   Sun,
   Moon,
+  User,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -24,7 +23,8 @@ const ProfilePage = () => {
 
   return (
     <AppShell header={<h2 className="font-bold text-foreground">Profile</h2>}>
-      <div className="px-4 py-6 space-y-6">
+      <div className="px-4 py-6 space-y-6 pb-24">
+        {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -32,148 +32,89 @@ const ProfilePage = () => {
         >
           <div className="w-20 h-20 rounded-full bg-card border-4 border-background shadow-lg flex items-center justify-center overflow-hidden">
             {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt={profile.full_name || ""}
-                className="w-full h-full object-cover"
+              <img 
+                src={profile.avatar_url} 
+                alt="Avatar" 
+                className="w-full h-full object-cover" 
               />
             ) : (
-              <span className="text-3xl font-extrabold text-muted-foreground">
-                {profile?.full_name?.[0] ||
-                  user?.email?.[0]?.toUpperCase() ||
-                  "?"}
-              </span>
+              <User size={40} className="text-muted-foreground" />
             )}
           </div>
-          <h3 className="font-extrabold text-xl text-foreground mt-3">
-            {profile?.full_name || user?.email || "No name set"}
+          <h3 className="font-extrabold text-xl text-foreground mt-3 text-center">
+            {profile?.full_name || "New User"}
           </h3>
-          <span className="text-xs font-bold uppercase tracking-widest text-primary mt-1 bg-primary/10 px-3 py-1 rounded-full">
-            {profile?.role || "No role"}
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary mt-2 bg-primary/20 px-4 py-1 rounded-full border border-primary/20">
+            {profile?.role === 'worker' ? "Worker Mode" : "Business Mode"}
           </span>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-2"
-        >
-          {profile?.skills && profile.skills.length > 0 && (
-            <div className="flex items-center gap-3 border border-border rounded-2xl p-4 bg-card">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Wrench size={18} className="text-primary" />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Skills
-                </span>
-                <p className="font-bold text-foreground text-sm">
-                  {profile.skills.join(", ")}
-                </p>
-              </div>
-            </div>
-          )}
-          {profile?.expected_pay_per_day && (
-            <div className="flex items-center gap-3 border border-border rounded-2xl p-4 bg-card">
-              <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
-                <IndianRupee size={18} className="text-success" />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Expected Pay
-                </span>
-                <p className="font-bold text-foreground text-sm">
-                  ₹{profile.expected_pay_per_day}/day
-                </p>
-              </div>
-            </div>
-          )}
-          {profile?.location_name && (
-            <div className="flex items-center gap-3 border border-border rounded-2xl p-4 bg-card">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <MapPin size={18} className="text-primary" />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Location
-                </span>
-                <p className="font-bold text-foreground text-sm">
-                  {profile.location_name}
-                </p>
-              </div>
-            </div>
-          )}
-          {profile?.rating_avg !== undefined &&
-            profile?.rating_avg !== null &&
-            profile.rating_avg > 0 && (
-              <div className="flex items-center gap-3 border border-border rounded-2xl p-4 bg-card">
+        {/* Info Cards */}
+        <div className="space-y-2">
+          {profile?.role === 'worker' && (
+            <>
+              <div className="flex items-center gap-3 border border-border rounded-2xl p-4 bg-card shadow-sm">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <Star size={18} className="text-primary fill-primary" />
+                  <Wrench size={18} className="text-primary" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Rating
-                  </span>
-                  <p className="font-bold text-foreground text-sm">
-                    {profile.rating_avg.toFixed(1)} / 5.0
-                  </p>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Primary Skill</span>
+                  <p className="font-bold text-foreground text-sm">{profile?.skills?.[0] || "Not set"}</p>
                 </div>
               </div>
-            )}
-        </motion.div>
+              <div className="flex items-center gap-3 border border-border rounded-2xl p-4 bg-card shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+                  <IndianRupee size={18} className="text-success" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Daily Expected Pay</span>
+                  <p className="font-bold text-foreground text-sm">₹{profile?.expected_pay_per_day || "0"}</p>
+                </div>
+              </div>
+            </>
+          )}
+          <div className="flex items-center gap-3 border border-border rounded-2xl p-4 bg-card shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <MapPin size={18} className="text-primary" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Base Location</span>
+              <p className="font-bold text-foreground text-sm">{profile?.location_name || "Not set"}</p>
+            </div>
+          </div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center justify-between border border-border rounded-2xl p-4 bg-card">
+        {/* Settings & Actions */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between border border-border rounded-2xl p-4 bg-card shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                {theme === "dark" ? (
-                  <Moon size={18} className="text-primary" />
-                ) : (
-                  <Sun size={18} className="text-primary" />
-                )}
+                {theme === "dark" ? <Moon size={18} className="text-primary" /> : <Sun size={18} className="text-primary" />}
               </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Theme
-                </span>
-                <p className="font-bold text-foreground text-sm">
-                  {theme === "dark" ? "Dark Mode" : "Light Mode"}
-                </p>
-              </div>
+              <p className="font-bold text-sm">Dark Mode</p>
             </div>
-            <Switch checked={theme === "light"} onCheckedChange={toggleTheme} />
+            <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
           </div>
-          <Button
-            variant="outline"
-            className="w-full"
+
+          <Button 
+            variant="outline" 
+            className="w-full h-12 rounded-xl font-bold press" 
             onClick={() => navigate("/profile/setup")}
           >
-            <Pencil size={16} /> Edit Profile
+            <Pencil size={16} className="mr-2" /> Edit Profile Details
           </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => navigate("/role-selection")}
-          >
-            <ArrowRightLeft size={16} /> Switch Role
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full text-destructive"
-            onClick={async () => {
-              await signOut();
+
+          <Button 
+            variant="ghost" 
+            className="w-full h-12 text-destructive font-bold hover:bg-destructive/10 mt-4" 
+            onClick={() => {
+              signOut();
               navigate("/login");
             }}
           >
-            <LogOut size={16} /> Logout
+            <LogOut size={16} className="mr-2" /> Logout Account
           </Button>
-        </motion.div>
+        </div>
       </div>
     </AppShell>
   );

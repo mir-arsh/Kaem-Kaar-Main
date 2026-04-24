@@ -13,6 +13,7 @@ import {
   Truck,
   MapPin,
   Briefcase,
+  Loader2,
   LayoutGrid,
   Home,
   Hammer,
@@ -21,15 +22,16 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Make sure these IDs match EXACTLY what is saved in your 'category' column in Supabase
 const CATEGORIES = [
   { id: "all", label: "All", icon: LayoutGrid },
-  { id: "repair", label: "Repair", icon: Wrench },
-  { id: "homehelp", label: "Home Help", icon: Home },
-  { id: "cooking", label: "Cook", icon: ChefHat },
-  { id: "delivery", label: "Delivery", icon: Truck },
-  { id: "education", label: "Tutor", icon: BookOpen },
-  { id: "labor", label: "Labor", icon: Hammer },
-  { id: "other", label: "Other", icon: MoreHorizontal }
+  { id: "Repair", label: "Repair", icon: Wrench },
+  { id: "Home Help", label: "Home Help", icon: Home },
+  { id: "Cook", label: "Cook", icon: ChefHat },
+  { id: "Delivery", label: "Delivery", icon: Truck },
+  { id: "Tutor", label: "Tutor", icon: BookOpen },
+  { id: "Labor", label: "Labor", icon: Hammer },
+  { id: "Other", label: "Other", icon: MoreHorizontal }
 ];
 
 const HomePage = () => {
@@ -44,7 +46,6 @@ const HomePage = () => {
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
-  // PERFORMANCE: Fetch jobs based on category and search directly from Supabase
   const fetchJobs = async (category, search) => {
     try {
       setLoading(true);
@@ -56,13 +57,14 @@ const HomePage = () => {
         `)
         .eq("status", "open")
         .order("created_at", { ascending: false })
-        .limit(20); // Speed: Limit initial results
+        .limit(20);
 
-      // Database-side filtering (much faster than client-side)
+      // Category filtering
       if (category !== "all") {
         query = query.eq("category", category);
       }
 
+      // Search filtering
       if (search.trim()) {
         query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,location_name.ilike.%${search}%`);
       }
@@ -77,11 +79,10 @@ const HomePage = () => {
     }
   };
 
-  // Trigger fetch on category change or search (debounced)
   useEffect(() => {
     const handler = setTimeout(() => {
       fetchJobs(activeCategoryId, searchQuery);
-    }, 400); // 400ms Debounce
+    }, 300); 
 
     return () => clearTimeout(handler);
   }, [activeCategoryId, searchQuery]);
@@ -90,148 +91,124 @@ const HomePage = () => {
     <AppShell header={null}>
       <div className="flex flex-col min-h-full">
         {/* Dark Hero Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="relative px-5 pt-4 pb-16 overflow-hidden bg-[hsl(25,90%,10%)]"
-        >
-          <div className="relative flex items-center justify-between mb-6">
-            <h1 className="text-lg font-extrabold tracking-tight text-[hsl(38,71%,93%)]">Kaem Kaar</h1>
-            <button 
-              onClick={() => navigate("/profile")} 
-              className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 bg-white/15 overflow-hidden text-white font-bold"
+        <div className="px-5 pt-6 pb-12 bg-[hsl(25,90%,10%)] text-[hsl(38,71%,93%)]">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-black tracking-tighter">Kaem Kaar</h1>
+            <div 
+              onClick={() => navigate("/profile")}
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold border border-white/20 cursor-pointer"
             >
-               {profile?.full_name?.[0]?.toUpperCase() || "?"}
-            </button>
+              {profile?.full_name?.[0]?.toUpperCase() || "U"}
+            </div>
           </div>
 
-          <p className="text-xs font-bold uppercase tracking-[0.15em] mb-2 text-[hsl(38,71%,68%)]">
-            Salam, {firstName.toUpperCase()}
-          </p>
-          <h2 className="text-3xl font-extrabold leading-tight mb-5 text-[hsl(38,71%,93%)] whitespace-pre-line">
+          <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Salam, {firstName}</p>
+          <h2 className="text-3xl font-black mt-2 leading-tight">
             {isHirer ? "Manage your posts\n& find workers" : "Find skilled help\nnear you today"}
           </h2>
 
-          <div className="relative">
-            <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5 bg-[hsl(38,40%,93%)] shadow-lg transition-all focus-within:ring-2 focus-within:ring-primary/30">
-              <Search size={18} className="text-[hsl(25,30%,50%)]" />
-              <input
-                className="flex-1 bg-transparent text-sm font-medium outline-none text-[hsl(25,90%,8%)] placeholder:text-[hsl(25,20%,50%)]"
+          <div className="mt-6 relative">
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-xl">
+              <Search size={18} className="text-muted-foreground" />
+              <input 
+                className="bg-transparent border-none outline-none text-sm font-bold text-black w-full placeholder:text-muted-foreground/60"
                 placeholder="Try 'plumber' or 'lal chowk'..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery("")}
-                  className="p-1 rounded-full bg-black/5 hover:bg-black/10 transition-colors"
-                >
-                  <X size={14} className="text-[hsl(25,30%,40%)]" />
-                </button>
-              )}
+              {searchQuery && <X size={18} className="text-muted-foreground" onClick={() => setSearchQuery("")} />}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Content Area */}
-        <div className="flex-1 rounded-t-3xl -mt-4 px-5 pt-6 pb-24 space-y-6 bg-background">
+        <div className="flex-1 bg-background rounded-t-[2.5rem] -mt-6 px-5 pt-8 pb-24 space-y-8">
           
-          {/* Categories Strip */}
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">Categories</p>
-            <div className="flex gap-2.5 overflow-x-auto pb-1 no-scrollbar">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategoryId(cat.id)}
-                  className={`press flex-shrink-0 flex flex-col items-center gap-1.5 rounded-2xl px-4 py-3 min-w-[72px] border transition-all ${
-                    activeCategoryId === cat.id 
-                    ? "bg-[#A32A1D] text-white border-[#A32A1D] shadow-md" 
-                    : "bg-[#F5E6D3] text-[#4A3728] border-transparent"
-                  }`}
-                >
-                  <cat.icon size={20} />
-                  <span className="text-[11px] font-bold">{cat.label}</span>
-                </button>
-              ))}
+          {/* CATEGORIES SECTION */}
+          <section>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Categories</p>
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+              {CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                const isActive = activeCategoryId === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategoryId(cat.id)}
+                    className={`flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all min-w-[80px] ${
+                      isActive 
+                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" 
+                      : "bg-card border-transparent text-foreground"
+                    }`}
+                  >
+                    <Icon size={20} />
+                    <span className="text-[10px] font-bold">{cat.label}</span>
+                  </button>
+                );
+              })}
             </div>
-          </div>
+          </section>
 
-          {/* Result Header */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                {searchQuery ? `Search results` : activeCategoryId === 'all' ? 'Latest Jobs' : `${activeCategoryId} Jobs`}
+          {/* JOBS LIST SECTION */}
+          <section className="space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                {activeCategoryId === 'all' ? 'Latest Openings' : `${activeCategoryId} Results`}
               </p>
-              {!searchQuery && (
-                <button onClick={() => navigate("/jobs")} className="text-xs font-bold text-primary">See all →</button>
-              )}
+              <button onClick={() => navigate("/jobs")} className="text-[10px] font-bold text-primary">SEE ALL →</button>
             </div>
 
-            <div className="space-y-3">
-              {loading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="h-24 w-full bg-muted/40 animate-pulse rounded-2xl" />
-                  ))}
-                </div>
-              ) : (
-                <AnimatePresence mode="popLayout">
-                  {jobs.length === 0 ? (
-                    <motion.div 
-                      initial={{ opacity: 0 }} 
-                      animate={{ opacity: 1 }} 
-                      className="text-center py-16 bg-muted/20 rounded-3xl border border-dashed border-muted-foreground/20"
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-24 w-full bg-muted animate-pulse rounded-2xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {jobs.length === 0 ? (
+                  <div className="text-center py-12 opacity-50 border-2 border-dashed rounded-3xl">
+                    <Search size={32} className="mx-auto mb-2" />
+                    <p className="text-xs font-bold">No jobs found in this category</p>
+                  </div>
+                ) : (
+                  jobs.map((job) => (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      key={job.id}
+                      onClick={() => navigate(`/jobs/${job.id}`)}
+                      className="p-4 bg-card border rounded-2xl flex items-center justify-between press shadow-sm"
                     >
-                      <Search className="mx-auto mb-3 opacity-20" size={40} />
-                      <p className="text-sm font-bold text-muted-foreground">No matches found</p>
-                    </motion.div>
-                  ) : (
-                    jobs.map((job) => (
-                      <motion.div
-                        layout
-                        key={job.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="press rounded-2xl p-4 bg-card border border-border shadow-sm cursor-pointer"
-                        onClick={() => navigate(`/jobs/${job.id}`)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary">
-                            <Briefcase size={20} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="font-bold text-sm leading-tight truncate">{job.title}</span>
-                              <span className="text-xs font-bold text-primary">₹{job.pay_amount}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-muted-foreground font-medium">
-                              <MapPin size={12} className="text-primary" />
-                              <span>{job.location_name}</span>
-                              <span>•</span>
-                              <span className="truncate">{job.profiles?.full_name}</span>
-                            </div>
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <Briefcase size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-sm truncate">{job.title}</h4>
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5">
+                            <MapPin size={10} className="text-primary" />
+                            <span className="truncate">{job.location_name}</span>
                           </div>
                         </div>
-                      </motion.div>
-                    ))
-                  )}
-                </AnimatePresence>
-              )}
-            </div>
-          </div>
+                      </div>
+                      <div className="text-right shrink-0 ml-2">
+                        <p className="text-sm font-black text-primary">₹{job.pay_amount}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{job.category}</p>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            )}
+          </section>
 
           {isHirer && (
             <button
               onClick={() => navigate("/post-job")}
-              className="press w-full flex items-center justify-between px-5 py-4 rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-lg"
+              className="w-full h-14 bg-primary text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-primary/20 press"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/15"><Plus size={18} /></div>
-                Post a New Job
-              </div>
-              <ArrowRight size={18} />
+              <Plus size={20} /> POST A NEW JOB
             </button>
           )}
         </div>
