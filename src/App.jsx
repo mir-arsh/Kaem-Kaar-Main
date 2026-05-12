@@ -36,8 +36,6 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // ONE-TIME SETUP LOGIC: 
-  // If user has no role and isn't already on the setup page, force them to setup.
   if (profileLoaded && !profile?.role && location.pathname !== "/profile/setup") {
     return <Navigate to="/profile/setup" replace />;
   }
