@@ -9,6 +9,7 @@ import { ArrowRight, MapPin, LocateFixed, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import AppShell from "@/components/AppShell";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { CATEGORY_OPTIONS, normalizeCategory } from "@/lib/categories";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -25,16 +26,7 @@ L.Icon.Default.mergeOptions({
 
 const DEFAULT_COORDS = { lat: 34.0837, lng: 74.7973 };
 
-// Generalized Categories
-const CATEGORIES = [
-  { id: "repair", label: "Maintenance & Repair" },
-  { id: "homehelp", label: "Home Help & Cleaning" },
-  { id: "cooking", label: "Cooking & Catering" },
-  { id: "delivery", label: "Delivery & Transport" },
-  { id: "education", label: "Tuition & Training" },
-  { id: "labor", label: "Manual Labor" },
-  { id: "other", label: "Other Services" }
-];
+const CATEGORIES = CATEGORY_OPTIONS;
 
 const DraggableMarker = ({ coords, setCoords }) => {
   useMapEvents({
@@ -98,11 +90,13 @@ const PostJobPage = () => {
     if (!user) return;
     setLoading(true);
 
+    const normalizedCategory = normalizeCategory(category);
+
     const { error } = await supabase.from("jobs").insert({
       hirer_id: user.id,
       title,
       description,
-      category,
+      category: normalizedCategory,
       location_name: location,
       latitude: coords.lat,
       longitude: coords.lng,
@@ -196,7 +190,7 @@ const PostJobPage = () => {
             </button>
           </div>
 
-          <div className="h-48 w-full rounded-2xl overflow-hidden border border-border">
+          <div className="h-48 w-full rounded-2xl overflow-hidden border border-border relative z-0">
             <MapContainer
               center={[coords.lat, coords.lng]}
               zoom={14}

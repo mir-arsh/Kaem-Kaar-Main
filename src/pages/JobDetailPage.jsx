@@ -75,6 +75,7 @@ const JobDetailPage = () => {
   const [userApplication, setUserApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [acceptedWorkerId, setAcceptedWorkerId] = useState(null);
 
   const isHirer = job?.hirer_id === user?.id;
 
@@ -88,6 +89,7 @@ const JobDetailPage = () => {
 
       if (jobError) throw jobError;
       setJob(jobData);
+      setAcceptedWorkerId(null);
 
       // Hirer Side: Fetch all applications
       if (jobData?.hirer_id === user?.id) {
@@ -96,6 +98,11 @@ const JobDetailPage = () => {
           .select(`id, worker_id, status, profiles:worker_id (full_name, avatar_url, rating_avg, skills)`)
           .eq("job_id", id);
         setApplicants(appData || []);
+
+        const acceptedApplication = (appData || []).find((app) => app.status === "accepted");
+        if (acceptedApplication?.worker_id) {
+          setAcceptedWorkerId(acceptedApplication.worker_id);
+        }
       } 
       
       // Worker Side: Fetch my application
@@ -179,9 +186,37 @@ const JobDetailPage = () => {
       const { data: updatedJob } = await supabase.from("jobs").update({ status: "in_progress" }).eq("id", id).select().single();
 
       setJob(updatedJob);
+      setAcceptedWorkerId(workerId);
       toast.success(`Hired ${workerName}!`);
     } catch (error) {
       toast.error("Error hiring");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    if (!job?.id || applicants.length > 0) return;
+
+    setActionLoading(true);
+    try {
+      const { error } = await supabase.from("jobs").delete().eq("id", id);
+      if (error) {
+        const { error: cancelError } = await supabase
+          .from("jobs")
+          .update({ status: "cancelled" })
+          .eq("id", id)
+          .select()
+          .single();
+
+        if (cancelError) throw cancelError;
+        toast.success("Job removed from your listings");
+      } else {
+        toast.success("Job deleted");
+      }
+      navigate("/jobs");
+    } catch (error) {
+      toast.error("Could not delete job");
     } finally {
       setActionLoading(false);
     }
@@ -227,6 +262,11 @@ const JobDetailPage = () => {
           <div className="space-y-4">
             {job?.status === "open" ? (
               <>
+                {applicants.length === 0 && (
+                  <Button variant="outline" className="w-full rounded-2xl border-destructive/30 text-destructive" onClick={handleDeleteJob} disabled={actionLoading}>
+                    <Trash2 size={16} className="mr-2" /> Delete Posting
+                  </Button>
+                )}
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">Current Applicants ({applicants.length})</h3>
                 <AnimatePresence>
                   {applicants.map((app) => (
@@ -249,7 +289,10 @@ const JobDetailPage = () => {
             ) : job?.status === "in_progress" && (
               <div className="bg-primary/5 border-2 border-primary/20 p-8 rounded-[2.5rem] text-center space-y-4">
                 <CheckCircle2 className="text-primary mx-auto" size={32} />
-                <Button className="w-full h-16 rounded-2xl bg-primary text-white font-black" onClick={() => handleUpdateJobStatus("completed")} disabled={actionLoading}>MARK COMPLETED</Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1 h-16 rounded-2xl" onClick={() => navigate(`/chat/${id}/${acceptedWorkerId}`)} disabled={!acceptedWorkerId || actionLoading}>Chat with Worker</Button>
+                  <Button className="flex-1 h-16 rounded-2xl bg-primary text-white font-black" onClick={() => handleUpdateJobStatus("completed")} disabled={actionLoading}>MARK COMPLETED</Button>
+                </div>
               </div>
             )}
           </div>

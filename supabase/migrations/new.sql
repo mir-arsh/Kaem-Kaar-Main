@@ -60,6 +60,9 @@ CREATE POLICY "Hirers can insert jobs"
 CREATE POLICY "Hirers can update own jobs"
   ON public.jobs FOR UPDATE USING (auth.uid() = hirer_id);
 
+CREATE POLICY "Hirers can delete own jobs"
+  ON public.jobs FOR DELETE USING (auth.uid() = hirer_id);
+
 
 -- 3. APPLICATIONS
 -- ============================================================

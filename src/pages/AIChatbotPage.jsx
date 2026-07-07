@@ -120,7 +120,7 @@ const AIChatbotPage = () => {
                   Rozgar Bab
                 </p>
                 <p className="text-sm text-muted-foreground max-w-[240px]">
-                  Ask me anything about jobs, pay rates, or how to use the app.
+                  Ask me anything about jobs, hiring, or how to use the app.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 justify-center mt-2">
@@ -128,8 +128,8 @@ const AIChatbotPage = () => {
                   profile?.role === "hirer"
                     ? "How do I post a job?"
                     : "How do I apply for jobs?",
-                  "What is fair daily pay?",
-                  "How does rating work?",
+                  "How the payment works?",
+                  "How does Kaem Kaar work?",
                 ].map((s) => (
                   <button
                     key={s}

@@ -22,6 +22,20 @@ const ChatPage = () => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (!user?.id || !jobId) return;
+
+    supabase
+      .from("messages")
+      .update({ is_read: true })
+      .eq("job_id", jobId)
+      .eq("receiver_id", user.id)
+      .eq("is_read", false)
+      .then(({ error }) => {
+        if (error) console.error(error);
+      });
+  }, [jobId, user?.id]);
+
   // Handle message deletion logic
   const handleDeleteMessage = async (messageId) => {
     const { error } = await supabase
