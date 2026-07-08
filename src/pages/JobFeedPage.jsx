@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { isActiveJobStatus, isCompletedJobStatus } from "@/lib/job-status";
 
 const statusConfig = {
   pending: { label: "Pending", classes: "bg-yellow-100 text-yellow-800" },
@@ -127,6 +128,11 @@ const JobFeedPage = () => {
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const visibleJobs = jobs.filter((job) => {
+    if (!isHirer) return true;
+    return tab === "completed" ? isCompletedJobStatus(job.status) : isActiveJobStatus(job.status);
+  });
+
   const fetchJobs = async () => {
     setLoading(true);
     let query = supabase
@@ -167,7 +173,7 @@ const JobFeedPage = () => {
   */
 
   useEffect(() => {
-    if (tab === "browse" || tab === "jobs") fetchJobs();
+    if (tab === "browse" || tab === "jobs" || tab === "completed") fetchJobs();
     // if (tab === "workers") fetchWorkers(); // FUTURE_FEATURE
   }, [tab, profile?.role]);
 
@@ -239,6 +245,12 @@ const JobFeedPage = () => {
             >
               Active Jobs
             </button>
+            <button
+              onClick={() => setTab("completed")}
+              className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${tab === "completed" ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}
+            >
+              Completed
+            </button>
             {/* FUTURE_FEATURE: Workers Tab
             <button onClick={() => setTab("workers")} className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${tab === "workers" ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}>
               Browse Workers
@@ -275,14 +287,14 @@ const JobFeedPage = () => {
               />
             ))}
           </div>
-        ) : jobs.length === 0 ? (
+        ) : visibleJobs.length === 0 ? (
           <div className="text-center py-20 opacity-40">
             <Search size={48} className="mx-auto mb-4" />
             <p className="font-bold">No jobs found</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {jobs.map((job) => (
+            {visibleJobs.map((job) => (
               <JobCard
                 key={job.id}
                 title={job.title}

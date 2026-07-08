@@ -59,7 +59,7 @@ const LoginPage = () => {
             KAEM KAAR
           </h1>
           <p className="text-muted-foreground text-sm font-medium">
-            {isSignUp ? "Create your account" : "Welcome back, chief"}
+            {isSignUp ? "Create your account" : "Welcome back, chief!"}
           </p>
         </div>
 

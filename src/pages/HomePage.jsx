@@ -21,17 +21,15 @@ import {
   X 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { CATEGORY_OPTIONS, normalizeCategory, getCategoryLabel } from "@/lib/categories";
 
-// Make sure these IDs match EXACTLY what is saved in your 'category' column in Supabase
 const CATEGORIES = [
   { id: "all", label: "All", icon: LayoutGrid },
-  { id: "Repair", label: "Repair", icon: Wrench },
-  { id: "Home Help", label: "Home Help", icon: Home },
-  { id: "Cook", label: "Cook", icon: ChefHat },
-  { id: "Delivery", label: "Delivery", icon: Truck },
-  { id: "Tutor", label: "Tutor", icon: BookOpen },
-  { id: "Labor", label: "Labor", icon: Hammer },
-  { id: "Other", label: "Other", icon: MoreHorizontal }
+  ...CATEGORY_OPTIONS.map((option) => ({
+    id: option.id,
+    label: option.label,
+    icon: option.id === "repair" ? Wrench : option.id === "homehelp" ? Home : option.id === "cooking" ? ChefHat : option.id === "delivery" ? Truck : option.id === "education" ? BookOpen : option.id === "labor" ? Hammer : MoreHorizontal,
+  })),
 ];
 
 const HomePage = () => {
@@ -61,7 +59,7 @@ const HomePage = () => {
 
       // Category filtering
       if (category !== "all") {
-        query = query.eq("category", category);
+        query = query.eq("category", normalizeCategory(category));
       }
 
       // Search filtering
@@ -104,14 +102,14 @@ const HomePage = () => {
 
           <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Salam, {firstName}</p>
           <h2 className="text-3xl font-black mt-2 leading-tight">
-            {isHirer ? "Manage your posts\n& find workers" : "Find skilled help\nnear you today"}
+            {isHirer ? "Manage your posts\n& find workers" : "Find skilled jobs\nnear you today"}
           </h2>
 
           <div className="mt-6 relative">
-            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-xl">
-              <Search size={18} className="text-muted-foreground" />
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-xl opacity-95">
+              <Search size={18} className="text-muted-foreground text-4xl " />
               <input 
-                className="bg-transparent border-none outline-none text-sm font-bold text-black w-full placeholder:text-muted-foreground/60"
+                className="bg-transparent border-none outline-none text-sm font-bold text-black w-full placeholder:text-muted-foreground/100"
                 placeholder="Try 'plumber' or 'lal chowk'..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -135,9 +133,9 @@ const HomePage = () => {
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategoryId(cat.id)}
-                    className={`flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all min-w-[80px] ${
+                    className={`flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl transition-all min-w-[80px] ${
                       isActive 
-                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" 
+                      ? "bg-amber-100 border-primary text-amber-900 shadow-lg" 
                       : "bg-card border-transparent text-foreground"
                     }`}
                   >
@@ -152,7 +150,7 @@ const HomePage = () => {
           {/* JOBS LIST SECTION */}
           <section className="space-y-4">
             <div className="flex justify-between items-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ">
                 {activeCategoryId === 'all' ? 'Latest Openings' : `${activeCategoryId} Results`}
               </p>
               <button onClick={() => navigate("/jobs")} className="text-[10px] font-bold text-primary">SEE ALL →</button>
@@ -194,7 +192,7 @@ const HomePage = () => {
                       </div>
                       <div className="text-right shrink-0 ml-2">
                         <p className="text-sm font-black text-primary">₹{job.pay_amount}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{job.category}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{getCategoryLabel(job.category)}</p>
                       </div>
                     </motion.div>
                   ))
@@ -206,7 +204,7 @@ const HomePage = () => {
           {isHirer && (
             <button
               onClick={() => navigate("/post-job")}
-              className="w-full h-14 bg-primary text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-primary/20 press"
+              className="w-full h-14 bg-primary text-amber-900 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-primary/10 press"
             >
               <Plus size={20} /> POST A NEW JOB
             </button>

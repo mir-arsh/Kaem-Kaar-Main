@@ -1,7 +1,9 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { Home, Briefcase, MessageCircle, User, Sparkles } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
@@ -14,6 +16,59 @@ const navItems = [
 const BottomNav = forwardRef((_, ref) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!user?.id) {
+        setUnreadCount(0);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("messages")
+        .select("id")
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+
+      if (!error) setUnreadCount(data?.length || 0);
+    };
+
+    fetchUnreadCount();
+
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel("bottom-nav-unread")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+        if (payload.new?.receiver_id === user.id && payload.new?.is_read !== true) {
+          setUnreadCount((prev) => prev + 1);
+        }
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
+        if (payload.new?.receiver_id === user.id && payload.old?.is_read === false && payload.new?.is_read === true) {
+          setUnreadCount((prev) => Math.max(prev - 1, 0));
+        }
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (location.pathname === "/messages" || location.pathname.startsWith("/chat/")) {
+      supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("receiver_id", user.id)
+        .eq("is_read", false)
+        .then(({ error }) => {
+          if (!error) setUnreadCount(0);
+        });
+    }
+  }, [location.pathname, user?.id]);
 
   return (
     <nav
@@ -36,6 +91,11 @@ const BottomNav = forwardRef((_, ref) => {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
               )}
               <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
+              {item.path === "/messages" && unreadCount > 0 && (
+                <span className="absolute right-3 top-2 min-w-4 h-4 px-1 rounded-full bg-destructive text-[9px] font-black text-destructive-foreground flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
               <span className="text-[10px] font-bold uppercase tracking-wider">
                 {item.label}
               </span>

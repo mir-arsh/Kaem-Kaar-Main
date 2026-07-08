@@ -15,7 +15,6 @@ import ChatPage from "./pages/ChatPage";
 import MessagesPage from "./pages/MessagesPage";
 import ProfilePage from "./pages/ProfilePage";
 import WorkerProfileSetup from "./pages/WorkerProfileSetup";
-import RatingPage from "./pages/RatingPage";
 import LoginPage from "./pages/LoginPage";
 import AIChatbotPage from "./pages/AIChatbotPage";
 import SplashScreen from "./pages/SplashScreen";
@@ -80,7 +79,6 @@ const App = () => {
                 <Route path="/assistant" element={<ProtectedRoute><AIChatbotPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/profile/setup" element={<ProtectedRoute><WorkerProfileSetup /></ProtectedRoute>} />
-                <Route path="/rate/:jobId" element={<ProtectedRoute><RatingPage /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

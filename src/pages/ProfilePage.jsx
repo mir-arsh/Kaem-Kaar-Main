@@ -106,7 +106,7 @@ const ProfilePage = () => {
 
           <Button 
             variant="ghost" 
-            className="w-full h-12 text-destructive font-bold hover:bg-destructive/10 mt-4" 
+            className="w-full h-12 text-destructive font-bold hover:bg-destructive/100 mt-4" 
             onClick={() => {
               signOut();
               navigate("/login");
