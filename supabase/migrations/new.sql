@@ -44,7 +44,7 @@ CREATE TABLE public.jobs (
   longitude DOUBLE PRECISION,
   pay_amount NUMERIC NOT NULL,
   job_date TEXT,
-  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'completed', 'cancelled')),
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'in_progress', 'completed', 'cancelled')),
   assigned_worker_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

@@ -1,4 +1,4 @@
-import { MapPin, Calendar, Star, ArrowRight, Wrench } from "lucide-react";
+import { MapPin, Calendar, ArrowRight, Wrench } from "lucide-react";
 
 const WorkerCard = ({
   name,
@@ -6,7 +6,6 @@ const WorkerCard = ({
   location,
   pay,
   date,
-  rating,
   avatarUrl,
   onContact,
 }) => {
@@ -39,12 +38,6 @@ const WorkerCard = ({
             <span className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
               <Wrench size={10} /> {skill}
             </span>
-            {rating > 0 && (
-              <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
-                <Star size={10} className="fill-primary text-primary" />{" "}
-                {rating.toFixed(1)}
-              </span>
-            )}
           </div>
         </div>
       </div>

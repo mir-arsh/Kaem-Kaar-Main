@@ -10,11 +10,13 @@ import { Loader2 } from "lucide-react";
 import HomePage from "./pages/HomePage";
 import JobFeedPage from "./pages/JobFeedPage";
 import PostJobPage from "./pages/PostJobPage";
+import PostAvailabilityPage from "./pages/PostAvailabilityPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import ChatPage from "./pages/ChatPage";
 import MessagesPage from "./pages/MessagesPage";
 import ProfilePage from "./pages/ProfilePage";
 import WorkerProfileSetup from "./pages/WorkerProfileSetup";
+import RoleSelectionPage from "./pages/RoleSelectionPage";
 import LoginPage from "./pages/LoginPage";
 import AIChatbotPage from "./pages/AIChatbotPage";
 import SplashScreen from "./pages/SplashScreen";
@@ -74,11 +76,13 @@ const App = () => {
                 <Route path="/jobs" element={<ProtectedRoute><JobFeedPage /></ProtectedRoute>} />
                 <Route path="/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
                 <Route path="/post-job" element={<ProtectedRoute><PostJobPage /></ProtectedRoute>} />
+                <Route path="/post-availability" element={<ProtectedRoute><PostAvailabilityPage /></ProtectedRoute>} />
                 <Route path="/chat/:jobId/:workerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
                 <Route path="/assistant" element={<ProtectedRoute><AIChatbotPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/profile/setup" element={<ProtectedRoute><WorkerProfileSetup /></ProtectedRoute>} />
+                <Route path="/role-selection" element={<ProtectedRoute><RoleSelectionPage /></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
