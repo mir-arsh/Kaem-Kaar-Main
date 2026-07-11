@@ -45,7 +45,7 @@ CREATE TABLE public.jobs (
   location_name TEXT,
   pay_amount NUMERIC NOT NULL,
   job_date TEXT,
-  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'completed')),
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'in_progress', 'completed')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 

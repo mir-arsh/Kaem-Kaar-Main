@@ -68,11 +68,11 @@ const AIChatbotPage = () => {
       const reply = data.reply || "Sorry, I couldn't respond. Try again.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
-      console.log("Error:", err.message);
-      return new Response(JSON.stringify({ reply: "Something went wrong." }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("AI chat error:", err);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Sorry, something went wrong. Please try again." },
+      ]);
     } finally {
       setLoading(false);
     }

@@ -20,7 +20,7 @@ import {
   MoreHorizontal,
   X 
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { CATEGORY_OPTIONS, normalizeCategory, getCategoryLabel } from "@/lib/categories";
 
 const CATEGORIES = [
@@ -57,17 +57,37 @@ const HomePage = () => {
         .order("created_at", { ascending: false })
         .limit(20);
 
-      // Category filtering
       if (category !== "all") {
         query = query.eq("category", normalizeCategory(category));
       }
 
-      // Search filtering
       if (search.trim()) {
         query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,location_name.ilike.%${search}%`);
       }
 
       const { data, error } = await query;
+
+      if (error?.message?.includes("column") && error.message.includes("category")) {
+        let fallbackQuery = supabase
+          .from("jobs")
+          .select(`
+            id, title, description, location_name, pay_amount, status,
+            profiles:hirer_id ( full_name )
+          `)
+          .eq("status", "open")
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (search.trim()) {
+          fallbackQuery = fallbackQuery.or(`title.ilike.%${search}%,description.ilike.%${search}%,location_name.ilike.%${search}%`);
+        }
+
+        const fallbackResult = await fallbackQuery;
+        if (fallbackResult.error) throw fallbackResult.error;
+        setJobs(fallbackResult.data || []);
+        return;
+      }
+
       if (error) throw error;
       setJobs(data || []);
     } catch (err) {
@@ -192,7 +212,7 @@ const HomePage = () => {
                       </div>
                       <div className="text-right shrink-0 ml-2">
                         <p className="text-sm font-black text-primary">₹{job.pay_amount}</p>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{getCategoryLabel(job.category)}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{getCategoryLabel(job.category || "other")}</p>
                       </div>
                     </motion.div>
                   ))

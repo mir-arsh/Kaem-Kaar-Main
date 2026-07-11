@@ -91,23 +91,32 @@ const PostJobPage = () => {
     setLoading(true);
 
     const normalizedCategory = normalizeCategory(category);
-
-    const { error } = await supabase.from("jobs").insert({
+    const basePayload = {
       hirer_id: user.id,
       title,
       description,
-      category: normalizedCategory,
       location_name: location,
       latitude: coords.lat,
       longitude: coords.lng,
       pay_amount: Number(pay),
       job_date: date,
       status: "open",
+    };
+
+    const { error } = await supabase.from("jobs").insert({
+      ...basePayload,
+      category: normalizedCategory,
     });
 
+    let insertError = error;
+    if (error?.message?.includes("column") && error.message.includes("category")) {
+      const { error: fallbackError } = await supabase.from("jobs").insert(basePayload);
+      insertError = fallbackError;
+    }
+
     setLoading(false);
-    if (error) {
-      toast.error(error.message);
+    if (insertError) {
+      toast.error(insertError.message);
     } else {
       toast.success("Job posted!");
       navigate("/");
