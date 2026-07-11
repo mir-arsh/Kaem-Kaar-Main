@@ -31,8 +31,17 @@ const LoginPage = () => {
 
         if (error) throw error;
 
-        toast.success("Account created! Welcome.");
-        navigate("/");
+        if (data?.user?.id) {
+          await supabase.from("profiles").upsert({
+            id: data.user.id,
+            full_name: fullName,
+            role: null,
+            phone_number: null,
+          });
+        }
+
+        toast.success("Account created! Please verify your email to continue.");
+        navigate("/login");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,

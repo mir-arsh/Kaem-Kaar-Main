@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   MessageCircle,
   Trash2,
-  Star,
   MapPin,
   CheckCircle2,
   XCircle,
@@ -95,7 +94,7 @@ const JobDetailPage = () => {
       if (jobData?.hirer_id === user?.id) {
         const { data: appData } = await supabase
           .from("applications")
-          .select(`id, worker_id, status, profiles:worker_id (full_name, avatar_url, rating_avg, skills)`)
+          .select(`id, worker_id, status, profiles:worker_id (full_name, avatar_url, skills)`)
           .eq("job_id", id);
         setApplicants(appData || []);
 
@@ -181,15 +180,35 @@ const JobDetailPage = () => {
   const handleAcceptWorker = async (workerId, workerName) => {
     setActionLoading(true);
     try {
-      await supabase.from("applications").update({ status: "accepted" }).eq("job_id", id).eq("worker_id", workerId);
-      await supabase.from("applications").delete().eq("job_id", id).neq("worker_id", workerId);
-      const { data: updatedJob } = await supabase.from("jobs").update({ status: "in_progress" }).eq("id", id).select().single();
+      const { error: acceptError } = await supabase
+        .from("applications")
+        .update({ status: "accepted" })
+        .eq("job_id", id)
+        .eq("worker_id", workerId);
+      if (acceptError) throw acceptError;
+
+      const { error: deleteError } = await supabase
+        .from("applications")
+        .delete()
+        .eq("job_id", id)
+        .neq("worker_id", workerId);
+      if (deleteError) throw deleteError;
+
+      const { data: updatedJob, error: jobError } = await supabase
+        .from("jobs")
+        .update({ status: "in_progress" })
+        .eq("id", id)
+        .select()
+        .single();
+      if (jobError) throw jobError;
 
       setJob(updatedJob);
       setAcceptedWorkerId(workerId);
+      await fetchJobAndApplicants();
       toast.success(`Hired ${workerName}!`);
     } catch (error) {
-      toast.error("Error hiring");
+      console.error("Hire error:", error);
+      toast.error(error?.message || "Error hiring");
     } finally {
       setActionLoading(false);
     }
@@ -201,21 +220,11 @@ const JobDetailPage = () => {
     setActionLoading(true);
     try {
       const { error } = await supabase.from("jobs").delete().eq("id", id);
-      if (error) {
-        const { error: cancelError } = await supabase
-          .from("jobs")
-          .update({ status: "cancelled" })
-          .eq("id", id)
-          .select()
-          .single();
-
-        if (cancelError) throw cancelError;
-        toast.success("Job removed from your listings");
-      } else {
-        toast.success("Job deleted");
-      }
+      if (error) throw error;
+      toast.success("Job deleted");
       navigate("/jobs");
     } catch (error) {
+      console.error("Delete job error:", error);
       toast.error("Could not delete job");
     } finally {
       setActionLoading(false);
@@ -227,7 +236,7 @@ const JobDetailPage = () => {
     try {
       const { data: updatedJob } = await supabase.from("jobs").update({ status: newStatus }).eq("id", id).select().single();
       setJob(updatedJob);
-      if (newStatus === "completed") navigate(`/rate/${id}`);
+      toast.success("Job status updated.");
     } catch (error) {
       toast.error("Update failed");
     } finally {
@@ -274,9 +283,6 @@ const JobDetailPage = () => {
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary">{app.profiles?.full_name?.charAt(0)}</div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-sm truncate">{app.profiles?.full_name}</h4>
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground mt-1">
-                          <Star size={10} className="text-yellow-500" fill="currentColor" /> {app.profiles?.rating_avg || "5.0"}
-                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button size="icon" variant="outline" className="rounded-xl" onClick={() => navigate(`/chat/${id}/${app.worker_id}`)}><MessageCircle size={18} /></Button>
@@ -312,7 +318,7 @@ const JobDetailPage = () => {
                   <p className="font-bold text-sm text-center">Applied & Pending</p>
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1 rounded-xl text-destructive" onClick={handleWithdraw} disabled={actionLoading}><Undo2 size={18} className="mr-2" /> Undo</Button>
-                    <Button className="flex-1 rounded-xl" onClick={() => navigate(`/chat/${id}/${user.id}`)}><MessageCircle size={18} className="mr-2" /> Chat</Button>
+                    <Button className="flex-1 rounded-xl" onClick={() => navigate(`/chat/${id}/${job.hirer_id}`)}><MessageCircle size={18} className="mr-2" /> Chat</Button>
                   </div>
                 </div>
               ) : (

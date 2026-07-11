@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import JobCard from "@/components/JobCard";
-import WorkerCard from "@/components/WorkerCard";
 import AppShell from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import {
@@ -165,12 +164,28 @@ const JobFeedPage = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("worker_availability")
-      .select("*, profiles(full_name, avatar_url, rating_avg)")
+      .select("*, profiles(full_name, avatar_url)")
       .eq("is_active", true);
     if (!error) setWorkers(data || []);
     setLoading(false);
   };
   */
+
+  useEffect(() => {
+    if (profile?.role) {
+      if (profile.role === "hirer" && tab === "browse") setTab("jobs");
+      if (profile.role !== "hirer" && tab === "jobs") setTab("browse");
+    }
+  }, [profile?.role]);
+
+  useEffect(() => {
+    if (!profile?.role) return;
+    if (profile.role === "hirer" && tab === "browse") {
+      setTab("jobs");
+    } else if (profile.role !== "hirer" && tab === "jobs") {
+      setTab("browse");
+    }
+  }, [profile?.role]);
 
   useEffect(() => {
     if (tab === "browse" || tab === "jobs" || tab === "completed") fetchJobs();

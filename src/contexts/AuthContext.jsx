@@ -21,10 +21,7 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       if (data) {
-        setProfile({
-          ...data,
-          rating_avg: Number(data.rating_avg) || 0,
-        });
+        setProfile(data);
       } else {
         setProfile(null);
       }
@@ -41,6 +38,15 @@ export const AuthProvider = ({ children }) => {
     setSession(null);
     setProfile(null);
     setProfileLoaded(false);
+  };
+
+  const setRole = async (role) => {
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, role }, { onConflict: ["id"] });
+    if (error) throw error;
+    await fetchProfile(user.id);
   };
 
   const refreshProfile = async () => {
@@ -76,7 +82,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, session, loading, profileLoaded, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, session, loading, profileLoaded, signOut, refreshProfile, setRole }}>
       {children}
     </AuthContext.Provider>
   );
