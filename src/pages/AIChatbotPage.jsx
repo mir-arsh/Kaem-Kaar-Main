@@ -54,7 +54,7 @@ const AIChatbotPage = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/super-responder`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/RozgarBABB`,
         {
           method: "POST",
           headers: {
