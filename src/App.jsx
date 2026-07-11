@@ -76,7 +76,8 @@ const App = () => {
                 <Route path="/post-job" element={<ProtectedRoute><PostJobPage /></ProtectedRoute>} />
                 <Route path="/chat/:jobId/:workerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-                <Route path="/assistant" element={<ProtectedRoute><AIChatbotPage /></ProtectedRoute>} />
+                {/* <Route path="/assistant" element={<ProtectedRoute><AIChatbotPage /></ProtectedRoute>} /> */}
+                {/* Fixing RB  */}
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/profile/setup" element={<ProtectedRoute><WorkerProfileSetup /></ProtectedRoute>} />
 
