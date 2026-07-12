@@ -79,7 +79,7 @@ const App = () => {
                 <Route path="/post-availability" element={<ProtectedRoute><PostAvailabilityPage /></ProtectedRoute>} />
                 <Route path="/chat/:jobId/:workerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-                <Route path="/assistant" element={<ProtectedRoute><AIChatbotPage /></ProtectedRoute>} />
+                {<Route path="/assistant" element={<ProtectedRoute><AIChatbotPage /></ProtectedRoute>} /> }
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/profile/setup" element={<ProtectedRoute><WorkerProfileSetup /></ProtectedRoute>} />
                 <Route path="/role-selection" element={<ProtectedRoute><RoleSelectionPage /></ProtectedRoute>} />
